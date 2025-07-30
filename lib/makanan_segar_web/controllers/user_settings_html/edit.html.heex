@@ -1,0 +1,44 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="text-center">
+    <.header>
+      Account Settings
+      <:subtitle>Manage your account email address and profile settings</:subtitle>
+    </.header>
+  </div>
+
+  <.form :let={f} for={@email_changeset} action={~p"/users/settings"} id="update_email">
+    <input type="hidden" name="action" value="update_email" />
+
+    <.input field={f[:email]} type="email" label="Email" autocomplete="username" required />
+
+    <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+  </.form>
+
+  <div class="divider" />
+
+  <.form :let={f} for={@profile_changeset} action={~p"/users/settings"} id="update_profile">
+    <input type="hidden" name="action" value="update_profile" />
+
+    <.input
+      field={f[:name]}
+      type="text"
+      label="Full Name"
+      placeholder="Enter your full name"
+      required
+    />
+
+    <.input
+      field={f[:address]}
+      type="textarea"
+      label="Address (Malaysia only)"
+      placeholder="Enter your address in Malaysia"
+      rows="3"
+    />
+
+    <.input field={f[:profile_image]} type="file" label="Profile Image" accept="image/*" />
+
+    <.button variant="primary" phx-disable-with="Updating...">
+      Update Profile
+    </.button>
+  </.form>
+</Layouts.app>

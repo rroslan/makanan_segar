@@ -1,0 +1,73 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="mx-auto max-w-sm">
+    <div class="text-center">
+      <.header>
+        Register for an account
+        <:subtitle>
+          Already registered?
+          <.link navigate={~p"/users/log-in"} class="font-semibold text-brand hover:underline">
+            Get a magic link
+          </.link>
+          to log in now.
+        </:subtitle>
+      </.header>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <.icon name="hero-user-plus" class="w-12 h-12 mx-auto text-primary mb-2" />
+          <h3 class="text-lg font-semibold">Join MakananSegar</h3>
+          <p class="text-sm text-base-content/70">
+            Create your account with just your name and email. No passwords required!
+          </p>
+        </div>
+
+        <.form :let={f} for={@changeset} action={~p"/users/register"}>
+          <.input
+            field={f[:name]}
+            type="text"
+            label="Full Name"
+            placeholder="Enter your full name"
+            required
+            phx-mounted={JS.focus()}
+          />
+
+          <.input
+            field={f[:email]}
+            type="email"
+            label="Email Address"
+            placeholder="Enter your email address"
+            autocomplete="username"
+            required
+          />
+
+          <.button phx-disable-with="Creating account..." class="btn btn-primary w-full mt-4">
+            <.icon name="hero-envelope" class="w-4 h-4 mr-2" /> Create Account & Send Magic Link
+          </.button>
+        </.form>
+
+        <div class="divider text-xs">What happens next?</div>
+
+        <div class="text-xs text-base-content/60 space-y-2">
+          <div class="flex items-start gap-2">
+            <span class="badge badge-primary badge-xs mt-1">1</span>
+            <span>Your account will be created instantly</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="badge badge-primary badge-xs mt-1">2</span>
+            <span>We'll send you a magic link to confirm and log in</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="badge badge-primary badge-xs mt-1">3</span>
+            <span>No password needed - just click the link!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center text-sm text-base-content/50 mt-4">
+      <p>🔒 Secure • 📧 Passwordless • 🚀 Simple</p>
+    </div>
+  </div>
+</Layouts.app>
