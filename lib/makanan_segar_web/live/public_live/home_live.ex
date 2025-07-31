@@ -109,7 +109,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
                       <!-- Messages Container -->
                       <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[400px]" id={"chat-messages-#{@selected_product.id}"} phx-hook="ScrollToBottom">
-                        <%= if assigns[:chat_messages] and length(@chat_messages) > 0 do %>
+                        <%= if assigns[:chat_messages] && is_list(@chat_messages) && length(@chat_messages) > 0 do %>
                           <%= for message <- @chat_messages do %>
                             <div class={[
                               "flex",
