@@ -47,6 +47,119 @@ const Hooks = {
       });
     },
   },
+  ScrollToBottom: {
+    mounted() {
+      this.scrollToBottom();
+    },
+    updated() {
+      this.scrollToBottom();
+    },
+    scrollToBottom() {
+      this.el.scrollTop = this.el.scrollHeight;
+    },
+  },
+  PreventDefault: {
+    mounted() {
+      this.el.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("PreventDefault: Preventing default behavior for", this.el);
+      });
+    },
+  },
+  DebugModal: {
+    mounted() {
+      console.log("DebugModal: Modal mounted", this.el);
+      this.checkVisibility();
+    },
+    updated() {
+      console.log("DebugModal: Modal updated", this.el);
+      this.checkVisibility();
+    },
+    checkVisibility() {
+      const isVisible = this.el.classList.contains("modal-open");
+      const hasModalBox = this.el.querySelector(".modal-box");
+      console.log("DebugModal: Visibility check", {
+        isVisible,
+        hasModalBox: !!hasModalBox,
+        classes: this.el.className,
+        display: window.getComputedStyle(this.el).display,
+        opacity: window.getComputedStyle(this.el).opacity,
+      });
+    },
+  },
+  ProductClickDebug: {
+    mounted() {
+      console.log("ProductClickDebug: Hook mounted on", this.el);
+      this.el.addEventListener("click", (e) => {
+        console.log("ProductClickDebug: Button clicked!", {
+          target: e.target,
+          phxValueId: e.target.dataset.phxValueId,
+          event: e,
+        });
+      });
+    },
+  },
+  ModalStateDebug: {
+    mounted() {
+      console.log("ModalStateDebug: Modal state hook mounted");
+      this.checkModalState();
+    },
+    updated() {
+      console.log("ModalStateDebug: Modal state updated");
+      this.checkModalState();
+    },
+    checkModalState() {
+      // Check if modal exists and is visible
+      const modal = document.querySelector("#product-modal");
+      const modalOpen = document.querySelector(".modal.modal-open");
+      const selectedProduct = document.querySelector("[data-selected-product]");
+
+      console.log("ModalStateDebug: Current state", {
+        modalExists: !!modal,
+        modalOpenExists: !!modalOpen,
+        selectedProductExists: !!selectedProduct,
+        modalClasses: modal ? modal.className : "no modal",
+        bodyClasses: document.body.className,
+      });
+    },
+  },
+  ChatFormReset: {
+    mounted() {
+      this.handleEvent("reset_chat_form", () => {
+        console.log("Resetting chat form");
+        const form = document.getElementById("chat-form");
+        if (form) {
+          form.reset();
+          // Focus back to content input for better UX
+          const contentInput = document.getElementById("message-content-input");
+          if (contentInput) {
+            contentInput.focus();
+          }
+        }
+        // Scroll to bottom after form reset
+        this.scrollToBottom();
+      });
+    },
+    scrollToBottom() {
+      // Find chat messages container and scroll to bottom
+      const chatContainer = document.querySelector('[id^="chat-messages-"]');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    },
+  },
+  ScrollToBottom: {
+    mounted() {
+      this.scrollToBottom();
+    },
+    updated() {
+      this.scrollToBottom();
+    },
+    scrollToBottom() {
+      this.el.scrollTop = this.el.scrollHeight;
+    },
+  },
 };
 
 const csrfToken = document
@@ -56,6 +169,16 @@ const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
   hooks: { ...colocatedHooks, ...Hooks },
+  metadata: {
+    click: (e, el) => {
+      console.log("LiveSocket click metadata:", {
+        target: e.target,
+        phxClick: el.getAttribute("phx-click"),
+        phxValueId: el.getAttribute("phx-value-id"),
+        dataset: el.dataset,
+      });
+    },
+  },
 });
 
 // Show progress bar on live navigation and form submits

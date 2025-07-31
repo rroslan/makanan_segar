@@ -97,7 +97,7 @@ defmodule MakananSegarWeb.Router do
   scope "/", MakananSegarWeb do
     pipe_through :browser
 
-    live "/products", PublicLive.ProductIndex, :index
+
     live "/products/:id", PublicLive.ProductShow, :show
     live "/vendors", PublicLive.VendorIndex, :index
     live "/vendors/:id", PublicLive.VendorShow, :show

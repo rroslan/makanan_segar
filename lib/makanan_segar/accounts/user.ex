@@ -135,8 +135,9 @@ defmodule MakananSegar.Accounts.User do
   defp validate_malaysia_address(changeset) do
     address = get_change(changeset, :address) || get_field(changeset, :address)
 
-    # Basic validation for Malaysian addresses
-    malaysian_states = [
+    # Basic validation for Malaysian addresses - including states and major cities
+    malaysian_locations = [
+      # States
       "johor",
       "kedah",
       "kelantan",
@@ -153,17 +154,52 @@ defmodule MakananSegar.Accounts.User do
       "terengganu",
       "kuala lumpur",
       "labuan",
-      "putrajaya"
+      "putrajaya",
+      # Major cities
+      "kuantan",
+      "ipoh",
+      "kota kinabalu",
+      "kuching",
+      "george town",
+      "georgetown",
+      "shah alam",
+      "petaling jaya",
+      "klang",
+      "johor bahru",
+      "kota bharu",
+      "alor setar",
+      "kangar",
+      "kuala terengganu",
+      "taiping",
+      "seremban",
+      "malacca",
+      "miri",
+      "sandakan",
+      "tawau",
+      "ampang",
+      "cheras",
+      "subang jaya",
+      "cyberjaya",
+      "rawang",
+      "kajang",
+      "sepang",
+      "nilai"
     ]
 
     address_lower = String.downcase(address || "")
 
-    has_malaysian_state =
-      Enum.any?(malaysian_states, fn state ->
-        String.contains?(address_lower, state)
+    # Check if address contains Malaysia or any Malaysian location
+    has_malaysia = String.contains?(address_lower, "malaysia")
+
+    has_malaysian_location =
+      Enum.any?(malaysian_locations, fn location ->
+        String.contains?(address_lower, location)
       end)
 
-    if has_malaysian_state do
+    # Check for Malaysian postal code pattern (5 digits)
+    has_malaysian_postcode = Regex.match?(~r/\b\d{5}\b/, address)
+
+    if has_malaysia or has_malaysian_location or has_malaysian_postcode do
       changeset
     else
       add_error(changeset, :address, "must be a valid Malaysian address")

@@ -3,10 +3,283 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
   alias MakananSegar.Products
   alias MakananSegar.Products.Product
+  alias MakananSegarWeb.ProductChatComponent
 
   @impl true
   def render(assigns) do
     ~H"""
+    <!-- Product Detail Modal -->
+    <%= if @selected_product do %>
+      <div
+        class="modal modal-open"
+        id="product-modal"
+        phx-hook="DebugModal"
+        data-selected-product="true"
+      >
+        <div class="modal-box w-11/12 max-w-5xl h-5/6 max-h-screen overflow-hidden flex flex-col">
+          <!-- Modal Header -->
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">{@selected_product.name}</h2>
+            <button
+              type="button"
+              class="btn btn-sm btn-circle btn-ghost"
+              phx-click="close_modal"
+              phx-value-debug="close-button"
+            >
+              ✕
+            </button>
+          </div>
+
+    <!-- Modal Content -->
+          <%= if @modal_loading do %>
+            <div class="flex-1 flex items-center justify-center">
+              <div class="text-center">
+                <span class="loading loading-spinner loading-lg"></span>
+                <p class="mt-4">Loading product details...</p>
+              </div>
+            </div>
+          <% else %>
+            <div class="flex-1 overflow-y-auto">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Product Details -->
+                <div class="space-y-4">
+                  <!-- Product Image -->
+                  <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    <%= if @selected_product.image do %>
+                      <img
+                        src={@selected_product.image}
+                        alt={@selected_product.name}
+                        class="w-full h-full object-cover"
+                      />
+                    <% else %>
+                      <div class="w-full h-full flex items-center justify-center text-gray-400">
+                        <div class="text-6xl">
+                          <%= case @selected_product.category do %>
+                            <% "fish" -> %>
+                              🐟
+                            <% "vegetables" -> %>
+                              🥬
+                            <% "fruits" -> %>
+                              🥭
+                            <% _ -> %>
+                              📦
+                          <% end %>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+
+    <!-- Product Info -->
+                  <div class="space-y-3">
+                    <div class="text-3xl font-bold text-green-600">
+                      RM {@selected_product.price}
+                    </div>
+                    <p class="text-gray-700">{@selected_product.description}</p>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span class="font-medium">Category:</span>
+                        <span class="ml-2">
+                          {Product.category_display_name(@selected_product.category)}
+                        </span>
+                      </div>
+                      <div>
+                        <span class="font-medium">Vendor:</span>
+                        <span class="ml-2">{@selected_product.user.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+    <!-- Chat Section -->
+                <div class="space-y-4 h-full flex flex-col">
+                  <%= if @chat_loading do %>
+                    <div class="flex items-center justify-center h-full">
+                      <div class="text-center">
+                        <span class="loading loading-spinner loading-md"></span>
+                        <p class="mt-2 text-sm">Loading chat...</p>
+                      </div>
+                    </div>
+                  <% else %>
+                    <div class="flex flex-col h-full">
+                      <!-- Chat Header -->
+                      <div class="border-b p-3">
+                        <h4 class="font-semibold text-gray-800">Ask about this product</h4>
+                        <p class="text-sm text-gray-600">Chat with the vendor</p>
+                      </div>
+
+                      <!-- Messages Container -->
+                      <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[400px]" id={"chat-messages-#{@selected_product.id}"} phx-hook="ScrollToBottom">
+                        <%= if assigns[:chat_messages] and length(@chat_messages) > 0 do %>
+                          <%= for message <- @chat_messages do %>
+                            <div class={[
+                              "flex",
+                              if(message.is_vendor_reply, do: "justify-end", else: "justify-start")
+                            ]}>
+                              <div class={[
+                                "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
+                                if(message.is_vendor_reply,
+                                  do: "bg-green-500 text-white",
+                                  else: "bg-gray-200 text-gray-800"
+                                )
+                              ]}>
+                                <div class="text-sm">
+                                  {message.content}
+                                </div>
+                                <div class={[
+                                  "text-xs mt-1 opacity-75",
+                                  if(message.is_vendor_reply, do: "text-green-100", else: "text-gray-600")
+                                ]}>
+                                  <span class="font-medium">
+                                    <%= if message.user do %>
+                                      {message.user.name || message.user.email}
+                                    <% else %>
+                                      {message.sender_name || "Anonymous"}
+                                    <% end %>
+                                  </span>
+                                  <%= if message.is_vendor_reply do %>
+                                    <span class="ml-1">• Vendor</span>
+                                  <% end %>
+                                  <span class="ml-2">{format_message_time(message.inserted_at)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          <% end %>
+                        <% else %>
+                          <div class="text-center text-gray-500 mt-8">
+                            <div class="text-4xl mb-2">💬</div>
+                            <p>Start a conversation!</p>
+                            <p class="text-sm">Ask questions about this product</p>
+                          </div>
+                        <% end %>
+                      </div>
+
+                      <!-- Simple Message Form -->
+                      <div class="border-t p-4">
+                        <form phx-submit="send_chat_message" phx-change="validate_chat_message" class="space-y-3" id="chat-form" phx-hook="ChatFormReset">
+                          <input type="hidden" name="product_id" value={@selected_product.id} />
+                          <div class="space-y-3">
+                            <%= if is_nil(@current_user) and not Map.get(assigns, :guest_name_provided, false) do %>
+                              <input
+                                type="text"
+                                name="sender_name"
+                                placeholder="Your name"
+                                class="input input-bordered text-sm"
+                                id="sender-name-input"
+                                required
+                              />
+                            <% end %>
+                            <div class="flex gap-2">
+                              <textarea
+                                name="content"
+                                placeholder="Ask about this product..."
+                                rows="2"
+                                class="textarea textarea-bordered flex-1 resize-none"
+                                id="message-content-input"
+                                required
+                              ></textarea>
+                              <button type="submit" class="btn btn-primary self-end" id="send-button">
+                                <span class="loading loading-spinner loading-sm hidden" id="loading-spinner"></span>
+                                <span id="button-text">Send</span>
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="modal-backdrop" phx-click="close_modal" phx-value-debug="backdrop"></div>
+      </div>
+    <% end %>
+
+    <!-- Vendor Detail Modal -->
+    <%= if @selected_vendor do %>
+      <div class="modal modal-open">
+        <div class="modal-box w-11/12 max-w-3xl">
+          <!-- Modal Header -->
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">Vendor Profile</h2>
+            <button type="button" class="btn btn-sm btn-circle btn-ghost" phx-click="close_modal">
+              ✕
+            </button>
+          </div>
+
+    <!-- Vendor Content -->
+          <div class="space-y-6">
+            <!-- Vendor Info -->
+            <div class="flex items-center gap-4">
+              <div class="avatar">
+                <div class="w-16 h-16 rounded-full">
+                  <%= if @selected_vendor.profile_image do %>
+                    <img src={@selected_vendor.profile_image} alt={@selected_vendor.name || "Vendor"} />
+                  <% else %>
+                    <div class="bg-primary text-primary-content w-full h-full flex items-center justify-center text-xl font-bold">
+                      {String.first(@selected_vendor.name || @selected_vendor.email)
+                      |> String.upcase()}
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold">
+                  {@selected_vendor.business_name || @selected_vendor.name || "Local Vendor"}
+                </h3>
+                <p class="text-gray-600">{@selected_vendor.email}</p>
+                <%= if @selected_vendor.business_description do %>
+                  <p class="text-sm text-gray-500 mt-1">{@selected_vendor.business_description}</p>
+                <% end %>
+              </div>
+            </div>
+
+    <!-- Vendor Products -->
+            <div>
+              <h4 class="text-lg font-semibold mb-3">Products from this vendor</h4>
+              <%= if @vendor_products == [] do %>
+                <p class="text-gray-500">No products available from this vendor.</p>
+              <% else %>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <%= for product <- @vendor_products do %>
+                    <div class="border rounded-lg p-3">
+                      <div class="flex gap-3">
+                        <div class="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-2xl">
+                          <%= case product.category do %>
+                            <% "fish" -> %>
+                              🐟
+                            <% "vegetables" -> %>
+                              🥬
+                            <% "fruits" -> %>
+                              🥭
+                            <% _ -> %>
+                              📦
+                          <% end %>
+                        </div>
+                        <div class="flex-1">
+                          <h5 class="font-medium">{product.name}</h5>
+                          <p class="text-green-600 font-bold">RM {product.price}</p>
+                          <button
+                            phx-click="view_product"
+                            phx-value-id={product.id}
+                            class="text-xs text-primary hover:underline"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+        <div class="modal-backdrop" phx-click="close_modal"></div>
+      </div>
+    <% end %>
+
     <div class="min-h-screen bg-base-100">
       <!-- Navigation Bar -->
       <div class="navbar bg-base-100 shadow-md sticky top-0 z-50">
@@ -24,22 +297,22 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
         <div class="navbar-end">
           <%= if assigns[:current_user] do %>
             <div class="flex items-center gap-2">
-              <%= if @current_user.is_admin do %>
+              <%= if assigns[:current_user] && @current_user.is_admin do %>
                 <.link navigate={~p"/admin"} class="btn btn-primary btn-sm">
                   Admin Dashboard
                 </.link>
               <% end %>
-              <%= if @current_user.is_vendor do %>
+              <%= if assigns[:current_user] && @current_user.is_vendor do %>
                 <.link navigate={~p"/vendor"} class="btn btn-success btn-sm">
                   Vendor Dashboard
                 </.link>
               <% end %>
-              
+
     <!-- User dropdown -->
               <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
                   <div class="w-10 rounded-full">
-                    <%= if @current_user.profile_image do %>
+                    <%= if assigns[:current_user] && @current_user.profile_image do %>
                       <img src={@current_user.profile_image} alt={@current_user.name || "User"} />
                     <% else %>
                       <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center">
@@ -66,7 +339,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                   class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
                 >
                   <li class="menu-title">
-                    <span>{@current_user.name || @current_user.email}</span>
+                    <span>{if assigns[:current_user], do: @current_user.name || @current_user.email, else: "Guest"}</span>
                   </li>
                   <li><.link navigate={~p"/users/settings"}>Settings</.link></li>
                   <li>
@@ -117,24 +390,72 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
           <% end %>
         </div>
       </div>
-      
+
+    <!-- Debug Section -->
+      <div class="container mx-auto px-4 py-4">
+        <div
+          id="debug-section"
+          class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4"
+          phx-hook="ModalStateDebug"
+        >
+          <p class="font-bold">Debug Info:</p>
+          <p>Selected Product: {if @selected_product, do: @selected_product.name, else: "None"}</p>
+          <p>Products Count: {length(@products)}</p>
+          <button phx-click="view_product" phx-value-id="1" class="btn btn-sm btn-warning mt-2">
+            Test Product Modal
+          </button>
+          <button phx-click="test_connection" class="btn btn-sm btn-info mt-2 ml-2">
+            Test LiveView Connection
+          </button>
+          <button
+            phx-click="force_modal_test"
+            phx-value-id="1"
+            class="btn btn-sm btn-success mt-2 ml-2"
+          >
+            Force Open Modal (Direct)
+          </button>
+        </div>
+      </div>
+
     <!-- Products Grid -->
       <div class="container mx-auto px-4 py-8">
         <%= if @products == [] do %>
           <div class="text-center py-16">
-            <div class="text-6xl mb-8">🥬</div>
-            <h3 class="text-2xl font-bold mb-4">No products available</h3>
-            <p class="text-base-content/70">Check back soon for fresh products!</p>
+            <div class="text-6xl mb-8">🛒</div>
+            <h2 class="text-3xl font-bold mb-4">No products available</h2>
+            <p class="text-base-content/70">Check back later for fresh products!</p>
           </div>
         <% else %>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <%= for product <- @products do %>
               <div
                 id={"product-#{product.id}"}
-                class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 h-full"
+                class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 h-full relative"
               >
+                <!-- Chat Notification Badge for Vendors -->
+                <%= if assigns[:current_user] && @current_user.is_vendor && product.user_id == @current_user.id do %>
+                  <%= if Map.get(@unread_counts, product.id, 0) > 0 do %>
+                    <div class="absolute top-2 right-2 z-10">
+                      <div class="badge badge-error badge-sm">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z">
+                          </path>
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                        </svg>
+                        {Map.get(@unread_counts, product.id)}
+                      </div>
+                    </div>
+                  <% end %>
+                <% end %>
                 <!-- Product Image -->
-                <.link navigate={~p"/products/#{product.id}"} class="group">
+                <div
+                  id={"product-click-#{product.id}"}
+                  class="cursor-pointer group"
+                  phx-click="view_product"
+                  phx-value-id={product.id}
+                  phx-hook="ProductClickDebug"
+                  onclick="console.log('Product button clicked:', this.dataset.phxValueId)"
+                >
                   <figure class="px-4 pt-4">
                     <div class="w-full h-48 rounded-lg overflow-hidden bg-base-200">
                       <%= if product.image do %>
@@ -159,29 +480,34 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       <% end %>
                     </div>
                   </figure>
-                </.link>
+                </div>
 
                 <div class="card-body p-4">
                   <!-- Category Badge -->
                   <div class={"badge badge-sm #{category_badge_class(product.category)} mb-2"}>
                     {Product.category_display_name(product.category)}
                   </div>
-                  
+
     <!-- Product Name -->
-                  <.link navigate={~p"/products/#{product.id}"} class="hover:text-primary">
+                  <div
+                    class="cursor-pointer hover:text-primary text-left w-full"
+                    phx-click="view_product"
+                    phx-value-id={product.id}
+                    onclick="console.log('Product title clicked:', this.dataset.phxValueId)"
+                  >
                     <h3 class="card-title text-lg line-clamp-1">{product.name}</h3>
-                  </.link>
-                  
+                  </div>
+
     <!-- Description -->
                   <p class="text-sm text-base-content/70 line-clamp-2 flex-grow">
                     {product.description || "Fresh product from local vendor"}
                   </p>
-                  
+
     <!-- Price -->
                   <div class="text-2xl font-bold text-primary mt-2">
                     RM {product.price}
                   </div>
-                  
+
     <!-- Expiry Info -->
                   <div class="text-xs text-base-content/60 mt-1">
                     <%= if Product.expired?(product) do %>
@@ -190,12 +516,15 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       Expires {format_time_until_expiry(product.expires_at)}
                     <% end %>
                   </div>
-                  
+
     <!-- Vendor Info with Avatar -->
                   <%= if product.user do %>
-                    <.link
-                      navigate={~p"/vendors/#{product.user.id}"}
-                      class="flex items-center gap-2 mt-3 text-xs text-base-content/60 hover:text-primary transition-colors"
+                    <button
+                      phx-click="view_vendor"
+                      phx-value-id={product.user.id}
+                      class="flex items-center gap-2 mt-3 text-xs text-base-content/60 hover:text-primary transition-colors w-full text-left"
+                      type="button"
+                      onclick="console.log('Vendor button clicked:', this.dataset.phxValueId)"
                     >
                       <div class="avatar">
                         <div class="w-6 h-6 rounded-full">
@@ -215,7 +544,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                         </p>
                       </div>
                       <.icon name="hero-arrow-right" class="w-3 h-3" />
-                    </.link>
+                    </button>
                   <% end %>
                 </div>
               </div>
@@ -233,31 +562,294 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
     current_user =
       case session["user_token"] do
         nil ->
+          IO.puts("DEBUG: No user token in session")
           nil
 
         token ->
           case MakananSegar.Accounts.get_user_by_session_token(token) do
-            {user, _} -> user
-            _ -> nil
+            {user, _} ->
+              IO.puts("DEBUG: User authenticated: #{user.email}")
+              user
+
+            _ ->
+              IO.puts("DEBUG: Invalid user token")
+              nil
           end
       end
+
+    IO.puts("DEBUG: HomeLive mount - current_user: #{inspect(current_user)}")
+    IO.puts("DEBUG: Socket connected?: #{connected?(socket)}")
 
     # All users can view the home page (no redirects)
     case current_user do
       _ ->
         # All users (admins, vendors, regular users, and non-authenticated) can view products
-        if connected?(socket) do
-          Phoenix.PubSub.subscribe(MakananSegar.PubSub, "products")
+        try do
+          if connected?(socket) do
+            Phoenix.PubSub.subscribe(MakananSegar.PubSub, "products")
+
+            # If user is a vendor, also subscribe to their chat notifications
+            if current_user && current_user.is_vendor do
+              MakananSegar.Chat.subscribe_to_vendor_chats(current_user.id)
+            end
+          end
+
+          products = Products.list_public_products()
+
+          # Load unread message counts for vendors
+          unread_counts =
+            if current_user && current_user.is_vendor do
+              try do
+                MakananSegar.Chat.get_vendor_unread_counts_by_product(current_user.id)
+              rescue
+                _ -> %{}
+              end
+            else
+              %{}
+            end
+
+          {:ok,
+           socket
+           |> assign(:page_title, "Fresh Products - MakananSegar")
+           |> assign(:products, products)
+           |> assign(:selected_product, nil)
+           |> assign(:selected_vendor, nil)
+           |> assign(:vendor_products, [])
+           |> assign(:unread_counts, unread_counts)
+           |> assign(:modal_loading, false)
+           |> assign(:chat_loading, false)
+           |> assign(:current_user, current_user)
+           |> assign(:guest_name_provided, false)
+           |> assign(:chat_messages, [])
+           |> assign(:connection_stable, connected?(socket))}
+        rescue
+          error ->
+            IO.puts("DEBUG: Error in mount: #{inspect(error)}")
+
+            {:ok,
+             socket
+             |> assign(:page_title, "Fresh Products - MakananSegar")
+             |> assign(:products, [])
+             |> assign(:selected_product, nil)
+             |> assign(:selected_vendor, nil)
+             |> assign(:vendor_products, [])
+             |> assign(:unread_counts, %{})
+             |> assign(:modal_loading, false)
+             |> assign(:chat_loading, false)
+             |> assign(:current_user, current_user)
+             |> assign(:guest_name_provided, false)
+             |> assign(:chat_messages, [])
+             |> assign(:connection_stable, false)
+             |> put_flash(:error, "Error loading page. Please refresh.")}
+        end
+    end
+  end
+
+  @impl true
+  def handle_event("view_product", %{"id" => product_id}, socket) do
+    # Handle both connected and disconnected states gracefully
+    socket = assign(socket, :connection_stable, connected?(socket))
+
+    # Set loading states immediately
+    socket = socket |> assign(:modal_loading, true) |> assign(:chat_loading, true)
+
+    case Integer.parse(product_id) do
+      {id, ""} ->
+        try do
+          product = Products.get_public_product!(id)
+
+          # Subscribe to chat updates for this product
+          if connected?(socket) do
+            MakananSegar.Chat.subscribe_to_product_chat(product.id)
+          end
+
+          # Load existing messages for this product
+          chat_messages =
+            try do
+              MakananSegar.Chat.list_product_messages(product.id)
+            rescue
+              _ -> []
+            end
+
+          # Clear notification count if vendor is viewing their own product
+          unread_counts =
+            if socket.assigns.current_user &&
+                 socket.assigns.current_user.is_vendor &&
+                 product.user_id == socket.assigns.current_user.id do
+              # Remove the count for this product since vendor is now viewing it
+              Map.delete(socket.assigns.unread_counts, product.id)
+            else
+              socket.assigns.unread_counts
+            end
+          # Set product and clear loading states
+          socket =
+            socket
+            |> assign(:selected_product, product)
+            |> assign(:unread_counts, unread_counts)
+            |> assign(:modal_loading, false)
+            |> assign(:chat_loading, false)
+            |> assign(:guest_name_provided, false)
+            |> assign(:chat_messages, chat_messages)
+
+          {:noreply, socket}
+        rescue
+          error ->
+            {:noreply,
+             socket
+             |> assign(:modal_loading, false)
+             |> assign(:chat_loading, false)
+             |> put_flash(:error, "Failed to load product")}
         end
 
-        products = Products.list_public_products()
-
-        {:ok,
-         socket
-         |> assign(:page_title, "Fresh Products - MakananSegar")
-         |> assign(:products, products)
-         |> assign(:current_user, current_user)}
+      _ ->
+        {:noreply, socket |> assign(:modal_loading, false) |> assign(:chat_loading, false)}
     end
+  end
+
+  @impl true
+  def handle_event("test_connection", _params, socket) do
+    {:noreply, put_flash(socket, :info, "LiveView connection test successful!")}
+  end
+
+  @impl true
+  def handle_event("force_modal_test", %{"id" => product_id}, socket) do
+    # Force set selected_product to test modal display
+    try do
+      product = Products.get_public_product!(String.to_integer(product_id))
+
+      socket =
+        socket
+        |> assign(:selected_product, product)
+        |> assign(:modal_loading, false)
+        |> assign(:chat_loading, false)
+        |> put_flash(:info, "Force modal test - modal should be visible now!")
+
+      {:noreply, socket}
+    rescue
+      error ->
+        {:noreply, put_flash(socket, :error, "Force modal test failed")}
+    end
+  end
+
+  @impl true
+  def handle_event("send_chat_message", params, socket) do
+    case socket.assigns.selected_product do
+      nil ->
+        {:noreply, put_flash(socket, :error, "Please select a product first")}
+
+      product ->
+        # Prepare message attributes
+        message_attrs = %{
+          "content" => params["content"],
+          "product_id" => product.id,
+          "sender_name" => params["sender_name"],
+          "is_vendor_reply" => false
+        }
+
+        # Add user_id if user is logged in
+        message_attrs =
+          if socket.assigns.current_user do
+            Map.put(message_attrs, "user_id", socket.assigns.current_user.id)
+          else
+            message_attrs
+          end
+
+        try do
+          case MakananSegar.Chat.create_customer_message(product.id, message_attrs) do
+            {:ok, message} ->
+              # Reload messages to include the new one
+              updated_messages =
+                try do
+                  MakananSegar.Chat.list_product_messages(product.id)
+                rescue
+                  _ -> socket.assigns.chat_messages ++ [message]
+                end
+
+              # Reset form and show success
+              socket =
+                socket
+                |> put_flash(:info, "Message sent successfully!")
+                |> assign(:guest_name_provided, not is_nil(params["sender_name"]))
+                |> assign(:chat_messages, updated_messages)
+                |> push_event("reset_chat_form", %{})
+
+              {:noreply, socket}
+
+            {:error, changeset} ->
+              {:noreply, put_flash(socket, :error, "Failed to send message. Please try again.")}
+          end
+        rescue
+          error ->
+            {:noreply, put_flash(socket, :error, "An error occurred while sending your message.")}
+        end
+    end
+  end
+
+  @impl true
+  def handle_event("validate_chat_message", _params, socket) do
+    # Just acknowledge the validation - we're keeping it simple
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("close_modal", _params, socket) do
+    # Unsubscribe from chat updates if we were subscribed
+    if socket.assigns.selected_product do
+      MakananSegar.Chat.unsubscribe_from_product_chat(socket.assigns.selected_product.id)
+    end
+
+    {:noreply,
+     socket
+     |> assign(:selected_product, nil)
+     |> assign(:selected_vendor, nil)
+     |> assign(:vendor_products, [])
+     |> assign(:modal_loading, false)
+     |> assign(:guest_name_provided, false)
+     |> assign(:chat_messages, [])
+     |> assign(:chat_loading, false)}
+  end
+
+  @impl true
+  def handle_event("view_vendor", %{"id" => vendor_id}, socket) do
+    IO.puts("DEBUG: view_vendor event received for vendor #{vendor_id}")
+
+    case Integer.parse(vendor_id) do
+      {id, ""} ->
+        try do
+          vendor = MakananSegar.Accounts.get_user!(id)
+
+          if vendor.is_vendor do
+            # Get vendor's products
+            vendor_products =
+              socket.assigns.products
+              |> Enum.filter(&(&1.user_id == vendor.id))
+              # Limit to 6 products in modal
+              |> Enum.take(6)
+
+            {:noreply,
+             socket
+             |> assign(:selected_vendor, vendor)
+             |> assign(:vendor_products, vendor_products)}
+          else
+            {:noreply, put_flash(socket, :error, "User is not a vendor")}
+          end
+        rescue
+          Ecto.NoResultsError ->
+            {:noreply, put_flash(socket, :error, "Vendor not found")}
+        end
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event(event_name, params, socket) do
+    IO.puts("=== UNHANDLED EVENT ===")
+    IO.puts("DEBUG: Unhandled event: #{event_name} with params: #{inspect(params)}")
+    IO.puts("DEBUG: Current user: #{inspect(socket.assigns.current_user)}")
+    IO.puts("DEBUG: Socket connected?: #{connected?(socket)}")
+    {:noreply, socket}
   end
 
   @impl true
@@ -271,6 +863,35 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
   def handle_info({:product_deleted, _product_id}, socket) do
     {:noreply, assign(socket, :products, Products.list_public_products())}
+  end
+
+  def handle_info({:message_created, message}, socket) do
+    IO.puts("DEBUG: Received message_created event for product #{message.product_id}")
+
+    # If the modal is open for this product, send update to the chat component
+    if socket.assigns.selected_product && socket.assigns.selected_product.id == message.product_id do
+      IO.puts("DEBUG: Updating chat component with new message")
+
+      send_update(ProductChatComponent,
+        id: "product-chat-#{message.product_id}",
+        new_message: message
+      )
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_info({:new_customer_message, _message}, socket) do
+    IO.puts("DEBUG: Received new customer message for vendor")
+    # Reload unread counts for vendor notification badges
+    if socket.assigns.current_user && socket.assigns.current_user.is_vendor do
+      unread_counts =
+        MakananSegar.Chat.get_vendor_unread_counts_by_product(socket.assigns.current_user.id)
+
+      {:noreply, assign(socket, :unread_counts, unread_counts)}
+    else
+      {:noreply, socket}
+    end
   end
 
   defp category_badge_class("fish"), do: "badge-info"
@@ -294,6 +915,28 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
       true ->
         days = div(diff_seconds, 86400)
         "in #{days} days"
+    end
+  end
+
+  # Helper function to format message time
+  defp format_message_time(datetime) do
+    now = DateTime.now!("Asia/Kuala_Lumpur")
+    diff_seconds = DateTime.diff(now, datetime, :second)
+
+    cond do
+      diff_seconds < 60 ->
+        "just now"
+
+      diff_seconds < 3600 ->
+        minutes = div(diff_seconds, 60)
+        "#{minutes}m ago"
+
+      diff_seconds < 86400 ->
+        hours = div(diff_seconds, 3600)
+        "#{hours}h ago"
+
+      true ->
+        Calendar.strftime(datetime, "%b %d")
     end
   end
 end

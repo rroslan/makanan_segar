@@ -258,4 +258,16 @@ defmodule MakananSegar.Products do
     )
     |> Repo.one!()
   end
+
+  @doc """
+  Gets a product by ID if it belongs to the specified vendor.
+  Returns nil if the product doesn't exist or doesn't belong to the vendor.
+  """
+  def get_product_by_vendor(product_id, vendor_user_id) do
+    from(p in Product,
+      where: p.id == ^product_id and p.user_id == ^vendor_user_id,
+      preload: [:user]
+    )
+    |> Repo.one()
+  end
 end
