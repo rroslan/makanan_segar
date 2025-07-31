@@ -103,8 +103,47 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                     <div class="flex flex-col h-full">
                       <!-- Chat Header -->
                       <div class="border-b p-3">
-                        <h4 class="font-semibold text-gray-800">Ask about this product</h4>
-                        <p class="text-sm text-gray-600">Chat with the vendor</p>
+                        <%= if assigns[:current_user] && @current_user.is_vendor && @selected_product.user_id == @current_user.id do %>
+                          <!-- Vendor View -->
+                          <div class="flex justify-between items-start">
+                            <div>
+                              <h4 class="font-semibold text-gray-800">Customer Messages</h4>
+                              <p class="text-sm text-gray-600">Manage customer inquiries</p>
+                            </div>
+                            <div class="flex gap-2">
+                              <%= if assigns[:conversation_status] && @conversation_status == "resolved" do %>
+                                <button
+                                  phx-click="reopen_conversation"
+                                  phx-value-product-id={@selected_product.id}
+                                  class="btn btn-sm btn-outline btn-warning"
+                                >
+                                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z"></path>
+                                    <path d="M5.707 12.707a1 1 0 010-1.414l1.414-1.414a1 1 0 011.414 1.414L7.414 12.5H9a1 1 0 010 2H4a1 1 0 01-1-1v-2a1 1 0 011-1h2.293l-1.086-1.086z"></path>
+                                  </svg>
+                                  Reopen
+                                </button>
+                                <div class="badge badge-success">Resolved</div>
+                              <% else %>
+                                <button
+                                  phx-click="mark_conversation_resolved"
+                                  phx-value-product-id={@selected_product.id}
+                                  class="btn btn-sm btn-success"
+                                >
+                                  <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                  </svg>
+                                  Mark Resolved
+                                </button>
+                                <div class="badge badge-info">Open</div>
+                              <% end %>
+                            </div>
+                          </div>
+                        <% else %>
+                          <!-- Customer View -->
+                          <h4 class="font-semibold text-gray-800">Ask about this product</h4>
+                          <p class="text-sm text-gray-600">Chat with the vendor</p>
+                        <% end %>
                       </div>
 
                       <!-- Messages Container -->
@@ -432,8 +471,24 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                 id={"product-#{product.id}"}
                 class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 h-full relative"
               >
-                <!-- Chat Notification Badge for Vendors -->
+                <!-- Chat Button and Notification Badge for Vendors -->
                 <%= if assigns[:current_user] && @current_user.is_vendor && product.user_id == @current_user.id do %>
+                  <!-- Chat Button -->
+                  <div class="absolute top-2 left-2 z-10">
+                    <button
+                      class="btn btn-sm btn-circle btn-info tooltip tooltip-right"
+                      data-tip="View Customer Messages"
+                      phx-click="view_product"
+                      phx-value-id={product.id}
+                    >
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
+                        <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Notification Badge -->
                   <%= if Map.get(@unread_counts, product.id, 0) > 0 do %>
                     <div class="absolute top-2 right-2 z-10">
                       <div class="badge badge-error badge-sm">
@@ -546,6 +601,31 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       <.icon name="hero-arrow-right" class="w-3 h-3" />
                     </button>
                   <% end %>
+
+                  <!-- Vendor Chat Management Section -->
+                  <%= if assigns[:current_user] && @current_user.is_vendor && product.user_id == @current_user.id do %>
+                    <div class="mt-3 pt-3 border-t border-base-300">
+                      <button
+                        phx-click="view_product"
+                        phx-value-id={product.id}
+                        class="btn btn-sm btn-outline btn-info w-full flex items-center gap-2"
+                      >
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
+                          <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
+                        </svg>
+                        <span>Customer Messages</span>
+                        <%= if Map.get(@unread_counts, product.id, 0) > 0 do %>
+                          <div class="badge badge-error badge-xs">
+                            {Map.get(@unread_counts, product.id)}
+                          </div>
+                        <% end %>
+                        <%= if Map.get(@conversation_statuses, product.id) == "resolved" do %>
+                          <div class="badge badge-success badge-xs ml-1">✓</div>
+                        <% end %>
+                      </button>
+                    </div>
+                  <% end %>
                 </div>
               </div>
             <% end %>
@@ -596,16 +676,29 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
           products = Products.list_public_products()
 
-          # Load unread message counts for vendors
+          # Load unread message counts for vendors (only open conversations)
           unread_counts =
             if current_user && current_user.is_vendor do
               try do
-                all_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product(current_user.id)
+                all_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(current_user.id)
                 # Remove counts for products viewed in this session
                 viewed_products = MapSet.new()
                 Enum.reduce(viewed_products, all_counts, fn product_id, acc ->
                   Map.delete(acc, product_id)
                 end)
+              rescue
+                _ -> %{}
+              end
+            else
+              %{}
+            end
+
+          # Load conversation statuses for vendors
+          conversation_statuses =
+            if current_user && current_user.is_vendor do
+              try do
+                product_ids = Enum.map(products, & &1.id)
+                MakananSegar.Chat.get_conversations_status(product_ids)
               rescue
                 _ -> %{}
               end
@@ -621,6 +714,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
            |> assign(:selected_vendor, nil)
            |> assign(:vendor_products, [])
            |> assign(:unread_counts, unread_counts)
+           |> assign(:conversation_statuses, conversation_statuses)
            |> assign(:modal_loading, false)
            |> assign(:chat_loading, false)
            |> assign(:current_user, current_user)
@@ -640,6 +734,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
              |> assign(:selected_vendor, nil)
              |> assign(:vendor_products, [])
              |> assign(:unread_counts, %{})
+             |> assign(:conversation_statuses, %{})
              |> assign(:modal_loading, false)
              |> assign(:chat_loading, false)
              |> assign(:current_user, current_user)
@@ -678,6 +773,19 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
               _ -> []
             end
 
+          # Load conversation status for vendors viewing their own products
+          conversation_status =
+            if socket.assigns.current_user &&
+                 socket.assigns.current_user.is_vendor &&
+                 product.user_id == socket.assigns.current_user.id do
+              case MakananSegar.Chat.get_conversation_by_product(product.id) do
+                nil -> "open"
+                conversation -> conversation.status
+              end
+            else
+              nil
+            end
+
           # Clear notification count if vendor is viewing their own product
           unread_counts =
             if socket.assigns.current_user &&
@@ -704,11 +812,12 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
           socket =
             socket
             |> assign(:selected_product, product)
-            |> assign(:unread_counts, unread_counts)
             |> assign(:modal_loading, false)
             |> assign(:chat_loading, false)
             |> assign(:guest_name_provided, false)
             |> assign(:chat_messages, chat_messages)
+            |> assign(:conversation_status, conversation_status)
+            |> assign(:unread_counts, unread_counts)
             |> assign(:viewed_products, viewed_products)
           {:noreply, socket}
         rescue
@@ -811,6 +920,52 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
   end
 
   @impl true
+  def handle_event("mark_conversation_resolved", %{"product-id" => product_id}, socket) do
+    if socket.assigns.current_user && socket.assigns.current_user.is_vendor do
+      case MakananSegar.Chat.mark_conversation_resolved(String.to_integer(product_id), socket.assigns.current_user.id) do
+        {:ok, _conversation} ->
+          # Update conversation status and refresh notification counts
+          unread_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(socket.assigns.current_user.id)
+
+          socket =
+            socket
+            |> assign(:conversation_status, "resolved")
+            |> assign(:unread_counts, unread_counts)
+            |> put_flash(:info, "Conversation marked as resolved")
+
+          {:noreply, socket}
+
+        {:error, _reason} ->
+          {:noreply, put_flash(socket, :error, "Failed to mark conversation as resolved")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
+  def handle_event("reopen_conversation", %{"product-id" => product_id}, socket) do
+    if socket.assigns.current_user && socket.assigns.current_user.is_vendor do
+      case MakananSegar.Chat.reopen_conversation(String.to_integer(product_id), socket.assigns.current_user.id) do
+        {:ok, _conversation} ->
+          # Update conversation status and refresh notification counts
+          unread_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(socket.assigns.current_user.id)
+
+          socket =
+            socket
+            |> assign(:conversation_status, "open")
+            |> assign(:unread_counts, unread_counts)
+            |> put_flash(:info, "Conversation reopened")
+
+          {:noreply, socket}
+
+        {:error, _reason} ->
+          {:noreply, put_flash(socket, :error, "Failed to reopen conversation")}
+      end
+    else
+      {:noreply, put_flash(socket, :error, "Unauthorized")}
+    end
+  end
+
   def handle_event("close_modal", _params, socket) do
     # Unsubscribe from chat updates if we were subscribed
     if socket.assigns.selected_product do
@@ -905,7 +1060,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
     # Reload unread counts for vendor notification badges
     if socket.assigns.current_user && socket.assigns.current_user.is_vendor do
       unread_counts =
-        MakananSegar.Chat.get_vendor_unread_counts_by_product(socket.assigns.current_user.id)
+        MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(socket.assigns.current_user.id)
 
       {:noreply, assign(socket, :unread_counts, unread_counts)}
     else

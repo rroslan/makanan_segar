@@ -7,7 +7,9 @@ defmodule MakananSegar.Chat do
   alias MakananSegar.Repo
 
   alias MakananSegar.Chat.Message
+  alias MakananSegar.Chat.Conversation
   alias MakananSegar.Products
+  alias MakananSegar.Products.Product
 
   @doc """
   Returns the list of messages for a specific product.
@@ -239,6 +241,101 @@ defmodule MakananSegar.Chat do
       where: p.id == ^product_id and p.user_id == ^vendor_user_id and m.is_vendor_reply == false
     )
     |> Repo.update_all(set: [updated_at: DateTime.utc_now()])
+  end
+
+  @doc """
+  Gets or creates a conversation for a product.
+  """
+  def get_or_create_conversation(product_id) do
+    case Repo.get_by(Conversation, product_id: product_id) do
+      nil ->
+        %Conversation{}
+        |> Conversation.changeset(%{product_id: product_id, status: "open"})
+        |> Repo.insert()
+
+      conversation ->
+        {:ok, conversation}
+    end
+  end
+
+  @doc """
+  Gets a conversation by product ID.
+  """
+  def get_conversation_by_product(product_id) do
+    Repo.get_by(Conversation, product_id: product_id)
+  end
+
+  @doc """
+  Marks a conversation as resolved.
+  """
+  def mark_conversation_resolved(product_id, resolved_by_user_id) do
+    # Verify the user is the vendor who owns this product
+    case Repo.get_by(Product, id: product_id, user_id: resolved_by_user_id) do
+      nil ->
+        {:error, :not_found}
+
+      _product ->
+        case get_or_create_conversation(product_id) do
+          {:ok, conversation} ->
+            conversation
+            |> Conversation.mark_resolved_changeset(resolved_by_user_id)
+            |> Repo.update()
+
+          error ->
+            error
+        end
+    end
+  end
+
+  @doc """
+  Reopens a resolved conversation.
+  """
+  def reopen_conversation(product_id, user_id) do
+    # Verify the user is the vendor who owns this product
+    case Repo.get_by(Product, id: product_id, user_id: user_id) do
+      nil ->
+        {:error, :not_found}
+
+      _product ->
+        case get_conversation_by_product(product_id) do
+          nil ->
+            {:error, :not_found}
+
+          conversation ->
+            conversation
+            |> Conversation.reopen_changeset()
+            |> Repo.update()
+        end
+    end
+  end
+
+  @doc """
+  Returns unread message counts per product for a vendor, excluding resolved conversations.
+  """
+  def get_vendor_unread_counts_by_product_open_only(vendor_user_id) do
+    from(m in Message,
+      join: p in assoc(m, :product),
+      left_join: c in Conversation, on: c.product_id == p.id,
+      where: p.user_id == ^vendor_user_id and m.is_vendor_reply == false,
+      where: is_nil(c.id) or c.status == "open",
+      group_by: m.product_id,
+      select: {m.product_id, count()}
+    )
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
+  @doc """
+  Gets conversation status for multiple products.
+  Returns a map of product_id => conversation_status.
+  """
+  def get_conversations_status(product_ids) when is_list(product_ids) do
+    from(c in Conversation,
+      where: c.product_id in ^product_ids,
+      select: {c.product_id, c.status}
+    )
+    |> Repo.all()
+    |> Enum.into(%{})
   end
 
   @doc """
