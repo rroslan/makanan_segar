@@ -17,7 +17,7 @@ defmodule MakananSegarWeb.Admin.DashboardLive do
           </.button>
         </:actions>
       </.header>
-      
+
     <!-- Quick Stats -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="stat bg-base-100 rounded-box shadow">
@@ -114,7 +114,7 @@ defmodule MakananSegarWeb.Admin.DashboardLive do
             <% end %>
           </div>
         </div>
-        
+
     <!-- Pending Vendor Requests -->
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
@@ -160,7 +160,7 @@ defmodule MakananSegarWeb.Admin.DashboardLive do
           </div>
         </div>
       </div>
-      
+
     <!-- Quick Actions -->
       <div class="mt-8">
         <div class="card bg-base-100 shadow-xl">
@@ -179,14 +179,14 @@ defmodule MakananSegarWeb.Admin.DashboardLive do
                 <.icon name="hero-cog-6-tooth" class="w-4 h-4 mr-2" /> Settings
               </.link>
 
-              <.link navigate={~p"/products"} class="btn btn-outline btn-info">
+              <.link navigate={~p"/"} class="btn btn-outline btn-info">
                 <.icon name="hero-cube" class="w-4 h-4 mr-2" /> View Products
               </.link>
             </div>
           </div>
         </div>
       </div>
-      
+
     <!-- Malaysia Time -->
       <div class="mt-4 text-center text-sm text-base-content/50">
         Current time (Malaysia): {format_malaysia_time(@current_time)}

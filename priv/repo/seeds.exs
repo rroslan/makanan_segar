@@ -314,8 +314,6 @@ fruit_products = [
 
 # Insert all products
 all_products = fish_products ++ vegetable_products ++ fruit_products
-created_products = []
-
 {created_products, _} = Enum.map_reduce(all_products, [], fn product_attrs, acc ->
   changeset =
     %Product{}
@@ -345,7 +343,7 @@ fruit_product = Enum.find(created_products, fn p -> p.user_id == fruit_vendor.id
 # Create conversations with messages
 if fish_product do
   # Customer inquiry about fish
-  {:ok, customer_msg1} = Chat.create_customer_message(fish_product.id, %{
+  {:ok, _customer_msg1} = Chat.create_customer_message(fish_product.id, %{
     "content" => "Hi, is this red snapper still fresh? When was it caught?",
     "sender_name" => "John Customer",
     "sender_email" => "#{local_part}+customer1@#{domain}"

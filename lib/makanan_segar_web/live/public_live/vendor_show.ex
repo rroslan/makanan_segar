@@ -29,7 +29,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
                 </ul>
               </div>
             </div>
-            
+
     <!-- Vendor Profile Header -->
             <div class="bg-gradient-to-br from-green-50 to-blue-50">
               <div class="container mx-auto px-4 py-12">
@@ -61,7 +61,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
                       </div>
                     </div>
                   </div>
-                  
+
     <!-- Vendor Info -->
                   <div class="lg:col-span-2">
                     <h1 class="text-4xl font-bold mb-2">
@@ -129,7 +129,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
                         </div>
                       </div>
                     <% end %>
-                    
+
     <!-- Product Categories -->
                     <%= if @product_categories != [] do %>
                       <div class="mb-6">
@@ -143,7 +143,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
                         </div>
                       </div>
                     <% end %>
-                    
+
     <!-- Contact Actions -->
                     <%= if @current_scope && @current_scope.user do %>
                       <div class="flex flex-wrap gap-2">
@@ -184,7 +184,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
                 </div>
               </div>
             </div>
-            
+
     <!-- Vendor Products -->
             <div class="container mx-auto px-4 py-12">
               <div class="flex justify-between items-center mb-8">
@@ -198,7 +198,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
                       else: "#{@product_count} fresh products"}
                   </p>
                 </div>
-                
+
     <!-- Category Filter -->
                 <%= if @product_categories != [] do %>
                   <div class="flex flex-wrap gap-2">
@@ -235,7 +235,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
                       This vendor hasn't listed any products yet.
                     <% end %>
                   </p>
-                  <.link navigate={~p"/products"} class="btn btn-primary mt-4">
+                  <.link navigate={~p"/"} class="btn btn-primary mt-4">
                     Browse Other Products
                   </.link>
                 </div>
@@ -316,7 +316,7 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
         <p class="text-sm text-base-content/70 line-clamp-2 mb-3">
           {@product.description}
         </p>
-        
+
     <!-- Price -->
         <div class="flex items-center justify-between mb-3">
           <div class="text-2xl font-bold text-primary">
@@ -326,12 +326,12 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
             per unit
           </div>
         </div>
-        
+
     <!-- Expiry Info -->
         <div class="text-xs text-base-content/60 mb-4">
           Expires: {format_expiry(@product.expires_at)}
         </div>
-        
+
     <!-- Actions -->
         <div class="card-actions justify-end">
           <.link navigate={~p"/products/#{@product.id}"} class="btn btn-primary btn-sm">

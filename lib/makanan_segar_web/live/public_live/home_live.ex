@@ -821,7 +821,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
             |> assign(:viewed_products, viewed_products)
           {:noreply, socket}
         rescue
-          error ->
+          _error ->
             {:noreply,
              socket
              |> assign(:modal_loading, false)
@@ -854,7 +854,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
       {:noreply, socket}
     rescue
-      error ->
+      _error ->
         {:noreply, put_flash(socket, :error, "Force modal test failed")}
     end
   end
@@ -903,11 +903,11 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
               {:noreply, socket}
 
-            {:error, changeset} ->
+            {:error, _changeset} ->
               {:noreply, put_flash(socket, :error, "Failed to send message. Please try again.")}
           end
         rescue
-          error ->
+          _error ->
             {:noreply, put_flash(socket, :error, "An error occurred while sending your message.")}
         end
     end

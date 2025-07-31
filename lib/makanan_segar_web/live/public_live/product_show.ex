@@ -23,9 +23,9 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
               <div class="breadcrumbs text-sm">
                 <ul>
                   <li><.link navigate={~p"/"}>Home</.link></li>
-                  <li><.link navigate={~p"/products"}>Products</.link></li>
+                  <li><.link navigate={~p"/"}>Products</.link></li>
                   <li>
-                    <.link navigate={~p"/products?category=#{@product.category}"}>
+                    <.link navigate={~p"/"}>
                       {Product.category_display_name(@product.category)}
                     </.link>
                   </li>
@@ -33,7 +33,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                 </ul>
               </div>
             </div>
-            
+
     <!-- Product Details -->
             <div class="container mx-auto px-4 pb-12">
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -66,7 +66,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       </div>
                     <% end %>
                   </div>
-                  
+
     <!-- Freshness Alert -->
                   <div class={"alert #{freshness_alert_class(@product)}"}>
                     <.icon name={freshness_icon(@product)} class="w-5 h-5" />
@@ -76,14 +76,14 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                     </div>
                   </div>
                 </div>
-                
+
     <!-- Product Info -->
                 <div class="space-y-6">
                   <!-- Category Badge -->
                   <div class={"badge badge-lg #{category_badge_class(@product.category)}"}>
                     {Product.category_display_name(@product.category)}
                   </div>
-                  
+
     <!-- Product Name & Price -->
                   <div>
                     <h1 class="text-4xl font-bold mb-4">{@product.name}</h1>
@@ -92,20 +92,20 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       <span class="text-base-content/60">per unit</span>
                     </div>
                   </div>
-                  
+
     <!-- Description -->
                   <div>
                     <h3 class="text-xl font-semibold mb-3">Description</h3>
                     <p class="text-base-content/80 leading-relaxed">{@product.description}</p>
                   </div>
-                  
+
     <!-- Vendor Information -->
                   <div class="card bg-base-200 shadow-sm">
                     <div class="card-body">
                       <h3 class="card-title text-lg mb-4">
                         <.icon name="hero-building-storefront" class="w-5 h-5" /> Vendor Profile
                       </h3>
-                      
+
     <!-- Vendor Header -->
                       <div class="flex items-center gap-4 mb-4">
                         <div class="avatar">
@@ -142,7 +142,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           <p class="text-sm text-base-content/70 mt-1">{@product.user.email}</p>
                         </div>
                       </div>
-                      
+
     <!-- Business Description -->
                       <%= if @product.user.business_description do %>
                         <div class="mb-4">
@@ -151,7 +151,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           </p>
                         </div>
                       <% end %>
-                      
+
     <!-- Business Details Grid -->
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                         <%= if @product.user.phone do %>
@@ -184,7 +184,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           </div>
                         <% end %>
                       </div>
-                      
+
     <!-- Vendor Stats -->
                       <%= if @vendor_stats do %>
                         <div class="mb-4">
@@ -211,7 +211,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           </div>
                         </div>
                       <% end %>
-                      
+
     <!-- Actions -->
                       <div class="flex gap-2">
                         <%= if @product.user.website do %>
@@ -226,7 +226,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       </div>
                     </div>
                   </div>
-                  
+
     <!-- Product Details -->
                   <div class="space-y-4">
                     <h3 class="text-xl font-semibold">Product Details</h3>
@@ -248,7 +248,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       <div class="stat-value text-lg">{time_until_expiry(@product.expires_at)}</div>
                     </div>
                   </div>
-                  
+
     <!-- Contact Actions -->
                   <div class="space-y-4">
                     <h3 class="text-xl font-semibold">Interested in this product?</h3>
@@ -291,7 +291,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                   </div>
                 </div>
               </div>
-              
+
     <!-- Related Products -->
               <%= if @related_products != [] do %>
                 <div class="mt-16">
@@ -353,7 +353,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                 <p class="text-base-content/70 mb-6">
                   The product you're looking for doesn't exist or may have expired.
                 </p>
-                <.link navigate={~p"/products"} class="btn btn-primary">
+                <.link navigate={~p"/"} class="btn btn-primary">
                   Browse All Products
                 </.link>
               </div>

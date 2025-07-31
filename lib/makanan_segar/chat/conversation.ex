@@ -72,8 +72,8 @@ defmodule MakananSegar.Chat.Conversation do
 
   defp validate_status_consistency(changeset) do
     status = get_change(changeset, :status)
-    resolved_at = get_change(changeset, :resolved_at)
-    resolved_by_user_id = get_change(changeset, :resolved_by_user_id)
+    _resolved_at = get_change(changeset, :resolved_at)
+    _resolved_by_user_id = get_change(changeset, :resolved_by_user_id)
 
     case status do
       "resolved" ->
