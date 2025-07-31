@@ -388,6 +388,11 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
 
   @impl true
   def handle_info({:load_vendor, vendor_id}, socket) do
+    # Subscribe to product updates for real-time updates
+    if connected?(socket) do
+      Phoenix.PubSub.subscribe(MakananSegar.PubSub, "products")
+    end
+
     try do
       vendor = Accounts.get_user!(vendor_id)
 
@@ -428,6 +433,79 @@ defmodule MakananSegarWeb.PublicLive.VendorShow do
           |> assign(:page_title, "Vendor Not Found")
 
         {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:product_created, product}, socket) do
+    if socket.assigns.vendor && product.user_id == socket.assigns.vendor.id do
+      products = [product | socket.assigns.products]
+      categories = Enum.uniq(Enum.map(products, & &1.category))
+
+      filtered_products =
+        if socket.assigns.selected_category == "" ||
+             product.category == socket.assigns.selected_category do
+          [product | socket.assigns.filtered_products]
+        else
+          socket.assigns.filtered_products
+        end
+
+      {:noreply,
+       socket
+       |> assign(:products, products)
+       |> assign(:filtered_products, filtered_products)
+       |> assign(:product_count, length(products))
+       |> assign(:product_categories, categories)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:product_updated, product}, socket) do
+    if socket.assigns.vendor && product.user_id == socket.assigns.vendor.id do
+      products =
+        Enum.map(socket.assigns.products, fn p ->
+          if p.id == product.id, do: product, else: p
+        end)
+
+      filtered_products =
+        if socket.assigns.selected_category == "" do
+          products
+        else
+          Enum.filter(products, &(&1.category == socket.assigns.selected_category))
+        end
+
+      {:noreply,
+       socket
+       |> assign(:products, products)
+       |> assign(:filtered_products, filtered_products)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:product_deleted, product_id}, socket) do
+    if socket.assigns.vendor do
+      products = Enum.reject(socket.assigns.products, &(&1.id == product_id))
+      categories = Enum.uniq(Enum.map(products, & &1.category))
+
+      filtered_products =
+        if socket.assigns.selected_category == "" do
+          products
+        else
+          Enum.filter(products, &(&1.category == socket.assigns.selected_category))
+        end
+
+      {:noreply,
+       socket
+       |> assign(:products, products)
+       |> assign(:filtered_products, filtered_products)
+       |> assign(:product_count, length(products))
+       |> assign(:product_categories, categories)}
+    else
+      {:noreply, socket}
     end
   end
 

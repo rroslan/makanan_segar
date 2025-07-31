@@ -30,6 +30,18 @@ defmodule MakananSegar.Products do
     key = scope.user.id
 
     Phoenix.PubSub.broadcast(MakananSegar.PubSub, "user:#{key}:products", message)
+
+    # Also broadcast to public channel for real-time updates on home page
+    case message do
+      {:created, product} ->
+        Phoenix.PubSub.broadcast(MakananSegar.PubSub, "products", {:product_created, product})
+
+      {:updated, product} ->
+        Phoenix.PubSub.broadcast(MakananSegar.PubSub, "products", {:product_updated, product})
+
+      {:deleted, product} ->
+        Phoenix.PubSub.broadcast(MakananSegar.PubSub, "products", {:product_deleted, product.id})
+    end
   end
 
   @doc """
