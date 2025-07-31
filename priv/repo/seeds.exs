@@ -37,16 +37,24 @@ IO.puts("📧 Fruits vendor email: #{fruit_vendor_email}")
 create_user = fn email, attrs ->
   user_attrs =
     Map.merge(attrs, %{
-      email: email,
-      password: "password123",
-      password_confirmation: "password123"
+      email: email
     })
 
-  %User{}
-  |> User.registration_changeset(user_attrs)
-  |> Repo.insert!()
-  |> User.confirm_changeset()
-  |> Repo.update!()
+  user =
+    %User{}
+    |> User.registration_changeset(user_attrs)
+    |> Repo.insert!()
+    |> User.confirm_changeset()
+    |> Repo.update!()
+
+  # Update admin and vendor flags using role changeset
+  if Map.has_key?(attrs, :is_admin) or Map.has_key?(attrs, :is_vendor) do
+    user
+    |> User.role_changeset(attrs)
+    |> Repo.update!()
+  else
+    user
+  end
 end
 
 # Create Admin User

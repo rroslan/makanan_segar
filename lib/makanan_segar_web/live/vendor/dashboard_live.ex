@@ -3,6 +3,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
   on_mount {MakananSegarWeb.UserAuthHooks, :require_vendor_user}
 
   alias MakananSegar.Products
+  alias MakananSegar.Products.Product
 
   @impl true
   def render(assigns) do
@@ -26,7 +27,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
           <% end %>
         </:actions>
       </.header>
-
+      
     <!-- Profile Completion Alert -->
       <%= unless @profile_complete do %>
         <div class="alert alert-warning shadow-lg mb-6">
@@ -40,7 +41,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
           </.link>
         </div>
       <% end %>
-
+      
     <!-- Quick Stats -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Profile Card -->
@@ -125,13 +126,11 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
                 <% end %>
               </div>
             <% else %>
-              <div class="space-y-3">
-                {render_recent_products(@recent_products)}
-              </div>
+              <.render_recent_products_list products={@recent_products} />
             <% end %>
           </div>
         </div>
-
+        
     <!-- Expiring Products Alert -->
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
@@ -146,14 +145,12 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
                 <p class="text-sm text-base-content/50">No products expiring in the next 24 hours</p>
               </div>
             <% else %>
-              <div class="space-y-3">
-                {render_expiring_products(@expiring_products)}
-              </div>
+              <.render_expiring_products_list products={@expiring_products} />
             <% end %>
           </div>
         </div>
       </div>
-
+      
     <!-- Quick Actions -->
       <div class="mt-8">
         <div class="card bg-base-100 shadow-xl">
@@ -189,7 +186,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
           </div>
         </div>
       </div>
-
+      
     <!-- Malaysia Time -->
       <div class="mt-4 text-center text-sm text-base-content/50">
         Current time (Malaysia): {format_malaysia_time(@current_time)}
@@ -272,15 +269,15 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
     {:noreply, assign(socket, :current_time, current_time)}
   end
 
-  defp format_time_ago(datetime) do
+  defp format_time_until_expiry(expires_at) do
     now = DateTime.utc_now()
-    diff = DateTime.diff(now, datetime, :second)
+    diff = DateTime.diff(expires_at, now, :second)
 
     cond do
-      diff < 60 -> "Just now"
-      diff < 3600 -> "#{div(diff, 60)} min ago"
-      diff < 86400 -> "#{div(diff, 3600)} hr ago"
-      true -> "#{div(diff, 86400)} days ago"
+      diff <= 0 -> "Expired"
+      diff < 3600 -> "#{div(diff, 60)} min left"
+      diff < 86400 -> "#{div(diff, 3600)} hr left"
+      true -> "#{div(diff, 86400)} days left"
     end
   end
 
@@ -288,82 +285,76 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
     Calendar.strftime(datetime, "%B %d, %Y at %I:%M %p %Z")
   end
 
-  defp render_recent_products(products) do
-    Enum.map(products, fn item ->
-      assigns = %{item: item}
-      ~H"""
-      <.link
-        navigate={~p"/vendor/products/#{@item.id}"}
-        class="flex items-center gap-3 p-3 border border-base-300 rounded-lg hover:bg-base-50 hover:shadow-md transition-all cursor-pointer group"
-      >
-        <div class="avatar">
-          <div class="w-12 h-12 rounded">
-            <%= if @item.image do %>
-              <img src={@item.image} alt={@item.name} />
-            <% else %>
-              <div class="bg-primary text-primary-content w-12 h-12 flex items-center justify-center">
-                {String.first(@item.name) |> String.upcase()}
-              </div>
-            <% end %>
-          </div>
-        </div>
-        <div class="flex-1">
-          <h4 class="font-semibold text-sm group-hover:text-primary">{@item.name}</h4>
-          <p class="text-xs text-base-content/70">{@item.category}</p>
-          <p class="text-xs font-medium">RM {@item.price}</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="flex flex-col items-end gap-1">
-            <div class={"badge badge-sm #{if @item.is_active, do: "badge-success", else: "badge-error"}"}>
-              {if @item.is_active, do: "Active", else: "Inactive"}
+  defp render_recent_products_list(assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <%= for recent_item <- @products do %>
+        <.link
+          navigate={~p"/vendor/products/#{recent_item.id}"}
+          class="flex items-center gap-3 p-3 border border-base-300 rounded-lg hover:bg-base-50 hover:shadow-md transition-all cursor-pointer group"
+        >
+          <div class="avatar">
+            <div class="w-12 h-12 rounded">
+              <%= if recent_item.image do %>
+                <img src={recent_item.image} alt={recent_item.name} />
+              <% else %>
+                <div class="bg-primary text-primary-content w-12 h-12 flex items-center justify-center">
+                  {String.first(recent_item.name) |> String.upcase()}
+                </div>
+              <% end %>
             </div>
-            <span class="text-xs text-base-content/50">
-              {format_time_ago(@item.inserted_at)}
-            </span>
           </div>
-          <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div class="flex-1">
+            <h4 class="font-semibold text-sm group-hover:text-primary">
+              {recent_item.name}
+            </h4>
+            <p class="text-xs text-base-content/70">{recent_item.category}</p>
+            <p class="text-xs font-medium">RM {recent_item.price}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex flex-col items-end gap-1">
+              <div class={"badge badge-sm #{if recent_item.is_active, do: "badge-success", else: "badge-error"}"}>
+                {if recent_item.is_active, do: "Active", else: "Inactive"}
+              </div>
+              <span class="text-xs text-base-content/50">
+                {if Product.expired?(recent_item),
+                  do: "Expired",
+                  else: format_time_until_expiry(recent_item.expires_at)}
+              </span>
+            </div>
+          </div>
+        </.link>
+      <% end %>
+    </div>
+    """
+  end
+
+  defp render_expiring_products_list(assigns) do
+    ~H"""
+    <div class="space-y-3">
+      <%= for expiring_item <- @products do %>
+        <div class="alert alert-warning">
+          <.icon name="hero-clock" class="w-4 h-4" />
+          <div class="flex-1">
+            <p class="font-semibold text-sm">{expiring_item.name}</p>
+            <p class="text-xs">
+              Expires {format_time_until_expiry(expiring_item.expires_at)}
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <.link navigate={~p"/vendor/products/#{expiring_item.id}"} class="btn btn-xs btn-ghost">
+              View
+            </.link>
             <.link
-              navigate={~p"/vendor/products/#{@item.id}/edit"}
-              class="btn btn-xs btn-ghost btn-square"
-              title="Edit product"
+              navigate={~p"/vendor/products/#{expiring_item.id}/edit"}
+              class="btn btn-xs btn-outline"
             >
-              <.icon name="hero-pencil" class="w-3 h-3" />
+              Edit
             </.link>
           </div>
         </div>
-      </.link>
-      """
-    end)
-  end
-
-  defp render_expiring_products(products) do
-    Enum.map(products, fn item ->
-      assigns = %{item: item}
-      ~H"""
-      <div class="alert alert-warning">
-        <.icon name="hero-clock" class="w-4 h-4" />
-        <div class="flex-1">
-          <h4 class="font-semibold">{@item.name}</h4>
-          <p class="text-sm">
-            Expires: {Calendar.strftime(@item.expires_at, "%B %d, %Y at %I:%M %p")}
-          </p>
-        </div>
-        <div class="flex gap-2">
-          <.link
-            navigate={~p"/vendor/products/#{@item.id}"}
-            class="btn btn-xs btn-ghost"
-          >
-            View
-          </.link>
-          <.link
-            navigate={~p"/vendor/products/#{@item.id}/edit"}
-            class="btn btn-xs btn-outline"
-          >
-            Edit
-          </.link>
-        </div>
-      </div>
-      """
-    end)
+      <% end %>
+    </div>
+    """
   end
 end
