@@ -29,7 +29,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
               ✕
             </button>
           </div>
-
+          
     <!-- Modal Content -->
           <%= if @modal_loading do %>
             <div class="flex-1 flex items-center justify-center">
@@ -68,7 +68,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       </div>
                     <% end %>
                   </div>
-
+                  
     <!-- Product Info -->
                   <div class="space-y-3">
                     <div class="text-3xl font-bold text-green-600">
@@ -89,7 +89,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                     </div>
                   </div>
                 </div>
-
+                
     <!-- Chat Section -->
                 <div class="space-y-4 h-full flex flex-col">
                   <%= if @chat_loading do %>
@@ -118,8 +118,10 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                                   class="btn btn-sm btn-outline btn-warning"
                                 >
                                   <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z"></path>
-                                    <path d="M5.707 12.707a1 1 0 010-1.414l1.414-1.414a1 1 0 011.414 1.414L7.414 12.5H9a1 1 0 010 2H4a1 1 0 01-1-1v-2a1 1 0 011-1h2.293l-1.086-1.086z"></path>
+                                    <path d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z">
+                                    </path>
+                                    <path d="M5.707 12.707a1 1 0 010-1.414l1.414-1.414a1 1 0 011.414 1.414L7.414 12.5H9a1 1 0 010 2H4a1 1 0 01-1-1v-2a1 1 0 011-1h2.293l-1.086-1.086z">
+                                    </path>
                                   </svg>
                                   Reopen
                                 </button>
@@ -131,7 +133,12 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                                   class="btn btn-sm btn-success"
                                 >
                                   <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    <path
+                                      fill-rule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clip-rule="evenodd"
+                                    >
+                                    </path>
                                   </svg>
                                   Mark Resolved
                                 </button>
@@ -145,9 +152,13 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                           <p class="text-sm text-gray-600">Chat with the vendor</p>
                         <% end %>
                       </div>
-
-                      <!-- Messages Container -->
-                      <div class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[400px]" id={"chat-messages-#{@selected_product.id}"} phx-hook="ScrollToBottom">
+                      
+    <!-- Messages Container -->
+                      <div
+                        class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[400px]"
+                        id={"chat-messages-#{@selected_product.id}"}
+                        phx-hook="ScrollToBottom"
+                      >
                         <%= if assigns[:chat_messages] && is_list(@chat_messages) && length(@chat_messages) > 0 do %>
                           <%= for message <- @chat_messages do %>
                             <div class={[
@@ -166,7 +177,10 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                                 </div>
                                 <div class={[
                                   "text-xs mt-1 opacity-75",
-                                  if(message.is_vendor_reply, do: "text-green-100", else: "text-gray-600")
+                                  if(message.is_vendor_reply,
+                                    do: "text-green-100",
+                                    else: "text-gray-600"
+                                  )
                                 ]}>
                                   <span class="font-medium">
                                     <%= if message.user do %>
@@ -191,10 +205,16 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                           </div>
                         <% end %>
                       </div>
-
-                      <!-- Simple Message Form -->
+                      
+    <!-- Simple Message Form -->
                       <div class="border-t p-4">
-                        <form phx-submit="send_chat_message" phx-change="validate_chat_message" class="space-y-3" id="chat-form" phx-hook="ChatFormReset">
+                        <form
+                          phx-submit="send_chat_message"
+                          phx-change="validate_chat_message"
+                          class="space-y-3"
+                          id="chat-form"
+                          phx-hook="ChatFormReset"
+                        >
                           <input type="hidden" name="product_id" value={@selected_product.id} />
                           <div class="space-y-3">
                             <%= if is_nil(@current_user) and not Map.get(assigns, :guest_name_provided, false) do %>
@@ -217,7 +237,11 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                                 required
                               ></textarea>
                               <button type="submit" class="btn btn-primary self-end" id="send-button">
-                                <span class="loading loading-spinner loading-sm hidden" id="loading-spinner"></span>
+                                <span
+                                  class="loading loading-spinner loading-sm hidden"
+                                  id="loading-spinner"
+                                >
+                                </span>
                                 <span id="button-text">Send</span>
                               </button>
                             </div>
@@ -238,80 +262,220 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
     <!-- Vendor Detail Modal -->
     <%= if @selected_vendor do %>
       <div class="modal modal-open">
-        <div class="modal-box w-11/12 max-w-3xl">
+        <div class="modal-box w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto">
           <!-- Modal Header -->
-          <div class="flex justify-between items-center mb-4">
+          <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Vendor Profile</h2>
             <button type="button" class="btn btn-sm btn-circle btn-ghost" phx-click="close_modal">
               ✕
             </button>
           </div>
-
+          
     <!-- Vendor Content -->
           <div class="space-y-6">
-            <!-- Vendor Info -->
-            <div class="flex items-center gap-4">
-              <div class="avatar">
-                <div class="w-16 h-16 rounded-full">
-                  <%= if @selected_vendor.profile_image do %>
-                    <img src={@selected_vendor.profile_image} alt={@selected_vendor.name || "Vendor"} />
-                  <% else %>
-                    <div class="bg-primary text-primary-content w-full h-full flex items-center justify-center text-xl font-bold">
-                      {String.first(@selected_vendor.name || @selected_vendor.email)
-                      |> String.upcase()}
+            <!-- Vendor Header -->
+            <div class="bg-gradient-to-r from-primary/10 to-secondary/10 p-6 rounded-lg">
+              <div class="flex items-start gap-6">
+                <div class="avatar">
+                  <div class="w-24 h-24 rounded-full ring ring-primary ring-offset-2">
+                    <%= if @selected_vendor.profile_image do %>
+                      <img
+                        src={@selected_vendor.profile_image}
+                        alt={@selected_vendor.name || "Vendor"}
+                        class="object-cover"
+                      />
+                    <% else %>
+                      <div class="bg-primary text-primary-content w-full h-full flex items-center justify-center text-3xl font-bold">
+                        {String.first(@selected_vendor.name || @selected_vendor.email)
+                        |> String.upcase()}
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-3xl font-bold text-primary mb-2">
+                    {@selected_vendor.business_name || @selected_vendor.name || "Local Vendor"}
+                  </h3>
+                  <%= if @selected_vendor.business_name && @selected_vendor.name do %>
+                    <p class="text-xl text-gray-700 mb-1">Owner: {@selected_vendor.name}</p>
+                  <% end %>
+                  <p class="text-gray-600 mb-3">{@selected_vendor.email}</p>
+                  
+    <!-- Business Type Badge -->
+                  <%= if @selected_vendor.business_type do %>
+                    <div class="flex gap-2 mb-3">
+                      <span class="badge badge-primary badge-lg">
+                        {String.capitalize(@selected_vendor.business_type)} Vendor
+                      </span>
+                    </div>
+                  <% end %>
+                  
+    <!-- Business Description -->
+                  <%= if @selected_vendor.business_description do %>
+                    <div class="bg-white/70 p-4 rounded-lg">
+                      <p class="text-gray-700 leading-relaxed">
+                        {@selected_vendor.business_description}
+                      </p>
                     </div>
                   <% end %>
                 </div>
-              </div>
-              <div>
-                <h3 class="text-xl font-semibold">
-                  {@selected_vendor.business_name || @selected_vendor.name || "Local Vendor"}
-                </h3>
-                <p class="text-gray-600">{@selected_vendor.email}</p>
-                <%= if @selected_vendor.business_description do %>
-                  <p class="text-sm text-gray-500 mt-1">{@selected_vendor.business_description}</p>
-                <% end %>
               </div>
             </div>
-
-    <!-- Vendor Products -->
-            <div>
-              <h4 class="text-lg font-semibold mb-3">Products from this vendor</h4>
-              <%= if @vendor_products == [] do %>
-                <p class="text-gray-500">No products available from this vendor.</p>
-              <% else %>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <%= for product <- @vendor_products do %>
-                    <div class="border rounded-lg p-3">
-                      <div class="flex gap-3">
-                        <div class="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-2xl">
-                          <%= case product.category do %>
-                            <% "fish" -> %>
-                              🐟
-                            <% "vegetables" -> %>
-                              🥬
-                            <% "fruits" -> %>
-                              🥭
-                            <% _ -> %>
-                              📦
-                          <% end %>
-                        </div>
-                        <div class="flex-1">
-                          <h5 class="font-medium">{product.name}</h5>
-                          <p class="text-green-600 font-bold">RM {product.price}</p>
-                          <button
-                            phx-click="view_product"
-                            phx-value-id={product.id}
-                            class="text-xs text-primary hover:underline"
-                          >
-                            View Details
-                          </button>
+            
+    <!-- Contact & Business Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Contact Information -->
+              <div class="card bg-base-100 shadow-lg">
+                <div class="card-body">
+                  <h4 class="card-title text-xl flex items-center gap-2">
+                    <span class="text-2xl">📞</span> Contact Information
+                  </h4>
+                  <div class="space-y-4">
+                    <%= if @selected_vendor.phone do %>
+                      <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                        <span class="text-2xl">📱</span>
+                        <div>
+                          <span class="font-medium text-sm text-gray-600">Phone</span>
+                          <p class="font-semibold">{@selected_vendor.phone}</p>
                         </div>
                       </div>
-                    </div>
-                  <% end %>
+                    <% end %>
+
+                    <%= if @selected_vendor.address do %>
+                      <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                        <span class="text-2xl">📍</span>
+                        <div>
+                          <span class="font-medium text-sm text-gray-600">Address</span>
+                          <p class="font-semibold">{@selected_vendor.address}</p>
+                        </div>
+                      </div>
+                    <% end %>
+
+                    <%= if @selected_vendor.website do %>
+                      <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                        <span class="text-2xl">🌐</span>
+                        <div>
+                          <span class="font-medium text-sm text-gray-600">Website</span>
+                          <a
+                            href={@selected_vendor.website}
+                            target="_blank"
+                            class="font-semibold text-primary hover:underline block"
+                          >
+                            {String.replace(@selected_vendor.website, ~r/^https?:\/\//, "")}
+                          </a>
+                        </div>
+                      </div>
+                    <% end %>
+
+                    <%= if !@selected_vendor.phone and !@selected_vendor.address and !@selected_vendor.website do %>
+                      <div class="text-center py-6">
+                        <span class="text-4xl">💬</span>
+                        <p class="text-gray-500 mt-2">Contact via product messaging</p>
+                      </div>
+                    <% end %>
+                  </div>
                 </div>
-              <% end %>
+              </div>
+              
+    <!-- Business Hours & Info -->
+              <div class="card bg-base-100 shadow-lg">
+                <div class="card-body">
+                  <h4 class="card-title text-xl flex items-center gap-2">
+                    <span class="text-2xl">🏪</span> Business Details
+                  </h4>
+                  <div class="space-y-4">
+                    <%= if @selected_vendor.business_hours do %>
+                      <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                        <span class="text-2xl">⏰</span>
+                        <div>
+                          <span class="font-medium text-sm text-gray-600">Operating Hours</span>
+                          <p class="font-semibold">{@selected_vendor.business_hours}</p>
+                        </div>
+                      </div>
+                    <% end %>
+
+                    <%= if @selected_vendor.business_registration_number do %>
+                      <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+                        <span class="text-2xl">📋</span>
+                        <div>
+                          <span class="font-medium text-sm text-gray-600">Registration</span>
+                          <p class="font-semibold">{@selected_vendor.business_registration_number}</p>
+                        </div>
+                      </div>
+                    <% end %>
+
+                    <%= if !@selected_vendor.business_hours and !@selected_vendor.business_registration_number do %>
+                      <div class="text-center py-6">
+                        <span class="text-4xl">🌟</span>
+                        <p class="text-gray-500 mt-2">Trusted local vendor</p>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+    <!-- Vendor Products -->
+            <div class="card bg-base-100 border border-base-300">
+              <div class="card-body">
+                <h4 class="card-title text-xl">Available Products</h4>
+                <%= if @vendor_products == [] do %>
+                  <div class="text-center py-8">
+                    <div class="text-4xl mb-4">📦</div>
+                    <p class="text-gray-500">No products currently available from this vendor.</p>
+                    <p class="text-sm text-gray-400 mt-1">Check back later for fresh items!</p>
+                  </div>
+                <% else %>
+                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <%= for product <- @vendor_products do %>
+                      <div class="card card-compact bg-base-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="card-body">
+                          <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-2xl">
+                              <%= case product.category do %>
+                                <% "fish" -> %>
+                                  🐟
+                                <% "vegetables" -> %>
+                                  🥬
+                                <% "fruits" -> %>
+                                  🥭
+                                <% _ -> %>
+                                  📦
+                              <% end %>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                              <h5 class="font-semibold text-sm truncate">{product.name}</h5>
+                              <div class="flex items-center justify-between mt-1">
+                                <span class="text-lg font-bold text-success">RM {product.price}</span>
+                                <div class={[
+                                  "badge badge-xs",
+                                  case product.category do
+                                    "fish" -> "badge-info"
+                                    "vegetables" -> "badge-success"
+                                    "fruits" -> "badge-warning"
+                                    _ -> "badge-neutral"
+                                  end
+                                ]}>
+                                  {String.capitalize(product.category)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="card-actions justify-end mt-2">
+                            <button
+                              phx-click="view_product"
+                              phx-value-id={product.id}
+                              class="btn btn-primary btn-xs"
+                            >
+                              View Details
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
             </div>
           </div>
         </div>
@@ -346,7 +510,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                   Vendor Dashboard
                 </.link>
               <% end %>
-
+              
     <!-- User dropdown -->
               <div class="dropdown dropdown-end">
                 <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
@@ -378,7 +542,11 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                   class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
                 >
                   <li class="menu-title">
-                    <span>{if assigns[:current_user], do: @current_user.name || @current_user.email, else: "Guest"}</span>
+                    <span>
+                      {if assigns[:current_user],
+                        do: @current_user.name || @current_user.email,
+                        else: "Guest"}
+                    </span>
                   </li>
                   <li><.link navigate={~p"/users/settings"}>Settings</.link></li>
                   <li>
@@ -429,33 +597,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
           <% end %>
         </div>
       </div>
-
-    <!-- Debug Section -->
-      <div class="container mx-auto px-4 py-4">
-        <div
-          id="debug-section"
-          class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4"
-          phx-hook="ModalStateDebug"
-        >
-          <p class="font-bold">Debug Info:</p>
-          <p>Selected Product: {if @selected_product, do: @selected_product.name, else: "None"}</p>
-          <p>Products Count: {length(@products)}</p>
-          <button phx-click="view_product" phx-value-id="1" class="btn btn-sm btn-warning mt-2">
-            Test Product Modal
-          </button>
-          <button phx-click="test_connection" class="btn btn-sm btn-info mt-2 ml-2">
-            Test LiveView Connection
-          </button>
-          <button
-            phx-click="force_modal_test"
-            phx-value-id="1"
-            class="btn btn-sm btn-success mt-2 ml-2"
-          >
-            Force Open Modal (Direct)
-          </button>
-        </div>
-      </div>
-
+      
     <!-- Products Grid -->
       <div class="container mx-auto px-4 py-8">
         <%= if @products == [] do %>
@@ -482,13 +624,15 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       phx-value-id={product.id}
                     >
                       <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
-                        <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
+                        <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z">
+                        </path>
+                        <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z">
+                        </path>
                       </svg>
                     </button>
                   </div>
-
-                  <!-- Notification Badge -->
+                  
+    <!-- Notification Badge -->
                   <%= if Map.get(@unread_counts, product.id, 0) > 0 do %>
                     <div class="absolute top-2 right-2 z-10">
                       <div class="badge badge-error badge-sm">
@@ -542,7 +686,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                   <div class={"badge badge-sm #{category_badge_class(product.category)} mb-2"}>
                     {Product.category_display_name(product.category)}
                   </div>
-
+                  
     <!-- Product Name -->
                   <div
                     class="cursor-pointer hover:text-primary text-left w-full"
@@ -552,17 +696,17 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                   >
                     <h3 class="card-title text-lg line-clamp-1">{product.name}</h3>
                   </div>
-
+                  
     <!-- Description -->
                   <p class="text-sm text-base-content/70 line-clamp-2 flex-grow">
                     {product.description || "Fresh product from local vendor"}
                   </p>
-
+                  
     <!-- Price -->
                   <div class="text-2xl font-bold text-primary mt-2">
                     RM {product.price}
                   </div>
-
+                  
     <!-- Expiry Info -->
                   <div class="text-xs text-base-content/60 mt-1">
                     <%= if Product.expired?(product) do %>
@@ -571,7 +715,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       Expires {format_time_until_expiry(product.expires_at)}
                     <% end %>
                   </div>
-
+                  
     <!-- Vendor Info with Avatar -->
                   <%= if product.user do %>
                     <button
@@ -579,7 +723,6 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       phx-value-id={product.user.id}
                       class="flex items-center gap-2 mt-3 text-xs text-base-content/60 hover:text-primary transition-colors w-full text-left"
                       type="button"
-                      onclick="console.log('Vendor button clicked:', this.dataset.phxValueId)"
                     >
                       <div class="avatar">
                         <div class="w-6 h-6 rounded-full">
@@ -601,8 +744,8 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                       <.icon name="hero-arrow-right" class="w-3 h-3" />
                     </button>
                   <% end %>
-
-                  <!-- Vendor Chat Management Section -->
+                  
+    <!-- Vendor Chat Management Section -->
                   <%= if assigns[:current_user] && @current_user.is_vendor && product.user_id == @current_user.id do %>
                     <div class="mt-3 pt-3 border-t border-base-300">
                       <button
@@ -611,8 +754,10 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                         class="btn btn-sm btn-outline btn-info w-full flex items-center gap-2"
                       >
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
-                          <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
+                          <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z">
+                          </path>
+                          <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z">
+                          </path>
                         </svg>
                         <span>Customer Messages</span>
                         <%= if Map.get(@unread_counts, product.id, 0) > 0 do %>
@@ -680,9 +825,12 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
           unread_counts =
             if current_user && current_user.is_vendor do
               try do
-                all_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(current_user.id)
+                all_counts =
+                  MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(current_user.id)
+
                 # Remove counts for products viewed in this session
                 viewed_products = MapSet.new()
+
                 Enum.reduce(viewed_products, all_counts, fn product_id, acc ->
                   Map.delete(acc, product_id)
                 end)
@@ -799,6 +947,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
           # Mark product as viewed by vendor (for this session)
           viewed_products = Map.get(socket.assigns, :viewed_products, MapSet.new())
+
           viewed_products =
             if socket.assigns.current_user &&
                  socket.assigns.current_user.is_vendor &&
@@ -819,6 +968,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
             |> assign(:conversation_status, conversation_status)
             |> assign(:unread_counts, unread_counts)
             |> assign(:viewed_products, viewed_products)
+
           {:noreply, socket}
         rescue
           _error ->
@@ -922,10 +1072,16 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
   @impl true
   def handle_event("mark_conversation_resolved", %{"product-id" => product_id}, socket) do
     if socket.assigns.current_user && socket.assigns.current_user.is_vendor do
-      case MakananSegar.Chat.mark_conversation_resolved(String.to_integer(product_id), socket.assigns.current_user.id) do
+      case MakananSegar.Chat.mark_conversation_resolved(
+             String.to_integer(product_id),
+             socket.assigns.current_user.id
+           ) do
         {:ok, _conversation} ->
           # Update conversation status and refresh notification counts
-          unread_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(socket.assigns.current_user.id)
+          unread_counts =
+            MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(
+              socket.assigns.current_user.id
+            )
 
           socket =
             socket
@@ -945,10 +1101,16 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
   def handle_event("reopen_conversation", %{"product-id" => product_id}, socket) do
     if socket.assigns.current_user && socket.assigns.current_user.is_vendor do
-      case MakananSegar.Chat.reopen_conversation(String.to_integer(product_id), socket.assigns.current_user.id) do
+      case MakananSegar.Chat.reopen_conversation(
+             String.to_integer(product_id),
+             socket.assigns.current_user.id
+           ) do
         {:ok, _conversation} ->
           # Update conversation status and refresh notification counts
-          unread_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(socket.assigns.current_user.id)
+          unread_counts =
+            MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(
+              socket.assigns.current_user.id
+            )
 
           socket =
             socket
@@ -985,35 +1147,22 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
 
   @impl true
   def handle_event("view_vendor", %{"id" => vendor_id}, socket) do
-    IO.puts("DEBUG: view_vendor event received for vendor #{vendor_id}")
+    try do
+      vendor_id_int = String.to_integer(vendor_id)
+      vendor = MakananSegar.Accounts.get_user!(vendor_id_int)
 
-    case Integer.parse(vendor_id) do
-      {id, ""} ->
-        try do
-          vendor = MakananSegar.Accounts.get_user!(id)
+      vendor_products =
+        socket.assigns.products
+        |> Enum.filter(&(&1.user_id == vendor.id))
+        |> Enum.take(6)
 
-          if vendor.is_vendor do
-            # Get vendor's products
-            vendor_products =
-              socket.assigns.products
-              |> Enum.filter(&(&1.user_id == vendor.id))
-              # Limit to 6 products in modal
-              |> Enum.take(6)
-
-            {:noreply,
-             socket
-             |> assign(:selected_vendor, vendor)
-             |> assign(:vendor_products, vendor_products)}
-          else
-            {:noreply, put_flash(socket, :error, "User is not a vendor")}
-          end
-        rescue
-          Ecto.NoResultsError ->
-            {:noreply, put_flash(socket, :error, "Vendor not found")}
-        end
-
-      _ ->
-        {:noreply, socket}
+      {:noreply,
+       socket
+       |> assign(:selected_vendor, vendor)
+       |> assign(:vendor_products, vendor_products)}
+    rescue
+      _error ->
+        {:noreply, put_flash(socket, :error, "Could not load vendor details")}
     end
   end
 
@@ -1060,15 +1209,15 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
     # Reload unread counts for vendor notification badges
     if socket.assigns.current_user && socket.assigns.current_user.is_vendor do
       unread_counts =
-        MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(socket.assigns.current_user.id)
+        MakananSegar.Chat.get_vendor_unread_counts_by_product_open_only(
+          socket.assigns.current_user.id
+        )
 
       {:noreply, assign(socket, :unread_counts, unread_counts)}
     else
       {:noreply, socket}
     end
   end
-
-
 
   defp category_badge_class("fish"), do: "badge-info"
   defp category_badge_class("vegetables"), do: "badge-success"
