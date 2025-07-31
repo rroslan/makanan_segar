@@ -13,6 +13,7 @@ defmodule MakananSegar.Chat.Message do
 
     belongs_to :product, Product
     belongs_to :user, User
+    has_many :message_reads, MakananSegar.Chat.MessageRead
 
     timestamps(type: :utc_datetime)
   end
@@ -73,5 +74,13 @@ defmodule MakananSegar.Chat.Message do
 
   def is_from_customer?(%__MODULE__{} = message) do
     not message.is_vendor_reply
+  end
+
+  @doc """
+  Checks if a message has been read by a specific user.
+  """
+  def read_by_user?(%__MODULE__{message_reads: %Ecto.Association.NotLoaded{}}, _user_id), do: false
+  def read_by_user?(%__MODULE__{} = message, user_id) do
+    Enum.any?(message.message_reads, fn read -> read.user_id == user_id end)
   end
 end

@@ -600,7 +600,12 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
           unread_counts =
             if current_user && current_user.is_vendor do
               try do
-                MakananSegar.Chat.get_vendor_unread_counts_by_product(current_user.id)
+                all_counts = MakananSegar.Chat.get_vendor_unread_counts_by_product(current_user.id)
+                # Remove counts for products viewed in this session
+                viewed_products = MapSet.new()
+                Enum.reduce(viewed_products, all_counts, fn product_id, acc ->
+                  Map.delete(acc, product_id)
+                end)
               rescue
                 _ -> %{}
               end
@@ -621,6 +626,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
            |> assign(:current_user, current_user)
            |> assign(:guest_name_provided, false)
            |> assign(:chat_messages, [])
+           |> assign(:viewed_products, MapSet.new())
            |> assign(:connection_stable, connected?(socket))}
         rescue
           error ->
@@ -639,6 +645,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
              |> assign(:current_user, current_user)
              |> assign(:guest_name_provided, false)
              |> assign(:chat_messages, [])
+             |> assign(:viewed_products, MapSet.new())
              |> assign(:connection_stable, false)
              |> put_flash(:error, "Error loading page. Please refresh.")}
         end
@@ -677,10 +684,22 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                  socket.assigns.current_user.is_vendor &&
                  product.user_id == socket.assigns.current_user.id do
               # Remove the count for this product since vendor is now viewing it
-              Map.delete(socket.assigns.unread_counts, product.id)
+              Map.delete(socket.assigns.unread_counts || %{}, product.id)
             else
-              socket.assigns.unread_counts
+              socket.assigns.unread_counts || %{}
             end
+
+          # Mark product as viewed by vendor (for this session)
+          viewed_products = Map.get(socket.assigns, :viewed_products, MapSet.new())
+          viewed_products =
+            if socket.assigns.current_user &&
+                 socket.assigns.current_user.is_vendor &&
+                 product.user_id == socket.assigns.current_user.id do
+              MapSet.put(viewed_products, product.id)
+            else
+              viewed_products
+            end
+
           # Set product and clear loading states
           socket =
             socket
@@ -690,7 +709,7 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
             |> assign(:chat_loading, false)
             |> assign(:guest_name_provided, false)
             |> assign(:chat_messages, chat_messages)
-
+            |> assign(:viewed_products, viewed_products)
           {:noreply, socket}
         rescue
           error ->
@@ -893,6 +912,8 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
       {:noreply, socket}
     end
   end
+
+
 
   defp category_badge_class("fish"), do: "badge-info"
   defp category_badge_class("vegetables"), do: "badge-success"

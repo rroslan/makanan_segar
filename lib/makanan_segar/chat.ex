@@ -231,6 +231,17 @@ defmodule MakananSegar.Chat do
   end
 
   @doc """
+  Mark all customer messages for a product as read by the vendor.
+  """
+  def mark_product_messages_as_read(product_id, vendor_user_id) do
+    from(m in Message,
+      join: p in assoc(m, :product),
+      where: p.id == ^product_id and p.user_id == ^vendor_user_id and m.is_vendor_reply == false
+    )
+    |> Repo.update_all(set: [updated_at: DateTime.utc_now()])
+  end
+
+  @doc """
   Subscribe to all vendor chat updates.
   """
   def subscribe_to_vendor_chats(vendor_user_id) do
