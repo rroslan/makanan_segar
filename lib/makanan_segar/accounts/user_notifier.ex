@@ -9,7 +9,7 @@ defmodule MakananSegar.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"MakananSegar", "contact@example.com"})
+      |> from({"MakananSegar", "noreply@applikasi"})
       |> subject(subject)
       |> text_body(body)
 
