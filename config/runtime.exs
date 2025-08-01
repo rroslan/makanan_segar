@@ -30,7 +30,8 @@ if config_env() == :prod do
 
   config :makanan_segar, MakananSegar.Mailer,
     adapter: Resend.Swoosh.Adapter,
-    api_key: System.fetch_env!("RESEND_API_KEY")
+    api_key: System.fetch_env!("RESEND_API_KEY"),
+    from: {"Makanan Segar", "noreply@applikasi.tech"}
 
   config :swoosh, :api_client, Swoosh.ApiClient.Finch
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
