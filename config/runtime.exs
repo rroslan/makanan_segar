@@ -73,6 +73,12 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  # Configure upload directory for production
+  uploads_dir = System.get_env("UPLOADS_DIR") || "/app/uploads"
+  File.mkdir_p!(uploads_dir)
+
+  config :river_side, :uploads_dir, uploads_dir
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key
