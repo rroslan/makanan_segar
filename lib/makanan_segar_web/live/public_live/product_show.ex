@@ -33,7 +33,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                 </ul>
               </div>
             </div>
-
+            
     <!-- Product Details -->
             <div class="container mx-auto px-4 pb-12">
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -66,7 +66,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       </div>
                     <% end %>
                   </div>
-
+                  
     <!-- Freshness Alert -->
                   <div class={"alert #{freshness_alert_class(@product)}"}>
                     <.icon name={freshness_icon(@product)} class="w-5 h-5" />
@@ -76,14 +76,14 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                     </div>
                   </div>
                 </div>
-
+                
     <!-- Product Info -->
                 <div class="space-y-6">
                   <!-- Category Badge -->
                   <div class={"badge badge-lg #{category_badge_class(@product.category)}"}>
                     {Product.category_display_name(@product.category)}
                   </div>
-
+                  
     <!-- Product Name & Price -->
                   <div>
                     <h1 class="text-4xl font-bold mb-4">{@product.name}</h1>
@@ -92,20 +92,20 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       <span class="text-base-content/60">per unit</span>
                     </div>
                   </div>
-
+                  
     <!-- Description -->
                   <div>
                     <h3 class="text-xl font-semibold mb-3">Description</h3>
                     <p class="text-base-content/80 leading-relaxed">{@product.description}</p>
                   </div>
-
+                  
     <!-- Vendor Information -->
                   <div class="card bg-base-200 shadow-sm">
                     <div class="card-body">
                       <h3 class="card-title text-lg mb-4">
                         <.icon name="hero-building-storefront" class="w-5 h-5" /> Vendor Profile
                       </h3>
-
+                      
     <!-- Vendor Header -->
                       <div class="flex items-center gap-4 mb-4">
                         <div class="avatar">
@@ -142,7 +142,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           <p class="text-sm text-base-content/70 mt-1">{@product.user.email}</p>
                         </div>
                       </div>
-
+                      
     <!-- Business Description -->
                       <%= if @product.user.business_description do %>
                         <div class="mb-4">
@@ -151,7 +151,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           </p>
                         </div>
                       <% end %>
-
+                      
     <!-- Business Details Grid -->
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                         <%= if @product.user.phone do %>
@@ -184,7 +184,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           </div>
                         <% end %>
                       </div>
-
+                      
     <!-- Vendor Stats -->
                       <%= if @vendor_stats do %>
                         <div class="mb-4">
@@ -211,7 +211,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                           </div>
                         </div>
                       <% end %>
-
+                      
     <!-- Actions -->
                       <div class="flex gap-2">
                         <%= if @product.user.website do %>
@@ -226,7 +226,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       </div>
                     </div>
                   </div>
-
+                  
     <!-- Product Details -->
                   <div class="space-y-4">
                     <h3 class="text-xl font-semibold">Product Details</h3>
@@ -248,7 +248,7 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                       <div class="stat-value text-lg">{time_until_expiry(@product.expires_at)}</div>
                     </div>
                   </div>
-
+                  
     <!-- Contact Actions -->
                   <div class="space-y-4">
                     <h3 class="text-xl font-semibold">Interested in this product?</h3>
@@ -291,58 +291,6 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
                   </div>
                 </div>
               </div>
-
-    <!-- Related Products -->
-              <%= if @related_products != [] do %>
-                <div class="mt-16">
-                  <h2 class="text-3xl font-bold mb-8">More from this vendor</h2>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    <%= for product <- @related_products do %>
-                      <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
-                        <figure class="px-4 pt-4">
-                          <div class="w-full h-32 rounded-lg overflow-hidden bg-base-200">
-                            <%= if product.image do %>
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                class="w-full h-full object-cover"
-                              />
-                            <% else %>
-                              <div class="w-full h-full flex items-center justify-center text-3xl">
-                                <%= case product.category do %>
-                                  <% "fish" -> %>
-                                    🐟
-                                  <% "vegetables" -> %>
-                                    🥬
-                                  <% "fruits" -> %>
-                                    🥭
-                                  <% _ -> %>
-                                    🥬
-                                <% end %>
-                              </div>
-                            <% end %>
-                          </div>
-                        </figure>
-
-                        <div class="card-body p-4">
-                          <h3 class="card-title text-sm">{product.name}</h3>
-                          <p class="text-primary font-bold">RM {product.price}</p>
-
-                          <div class="card-actions justify-end mt-2">
-                            <.link
-                              navigate={~p"/products/#{product.id}"}
-                              class="btn btn-primary btn-xs"
-                            >
-                              View
-                            </.link>
-                          </div>
-                        </div>
-                      </div>
-                    <% end %>
-                  </div>
-                </div>
-              <% end %>
             </div>
           <% else %>
             <!-- Product Not Found -->
@@ -371,7 +319,6 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
      socket
      |> assign(:loading, true)
      |> assign(:product, nil)
-     |> assign(:related_products, [])
      |> assign(:vendor_stats, nil)}
   end
 
@@ -392,19 +339,12 @@ defmodule MakananSegarWeb.PublicLive.ProductShow do
     try do
       product = Products.get_public_product!(product_id)
 
-      # Load related products from the same vendor (excluding current product)
-      related_products =
-        Products.list_public_products()
-        |> Enum.filter(fn p -> p.user_id == product.user_id && p.id != product.id end)
-        |> Enum.take(4)
-
       # Load vendor stats
       vendor_stats = get_vendor_stats_for_user(product.user)
 
       socket =
         socket
         |> assign(:product, product)
-        |> assign(:related_products, related_products)
         |> assign(:vendor_stats, vendor_stats)
         |> assign(:loading, false)
         |> assign(:page_title, product.name)

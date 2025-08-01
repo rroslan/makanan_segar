@@ -3,7 +3,6 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
   on_mount {MakananSegarWeb.UserAuthHooks, :require_vendor_user}
 
   alias MakananSegar.Products
-  alias MakananSegar.Products.Product
 
   @impl true
   def render(assigns) do
@@ -27,7 +26,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
           <% end %>
         </:actions>
       </.header>
-
+      
     <!-- Profile Completion Alert -->
       <%= unless @profile_complete do %>
         <div class="alert alert-warning shadow-lg mb-6">
@@ -41,7 +40,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
           </.link>
         </div>
       <% end %>
-
+      
     <!-- Quick Stats -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Profile Card -->
@@ -126,11 +125,17 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
                 <% end %>
               </div>
             <% else %>
-              <.render_recent_products_list products={@recent_products} />
+              <div class="text-center py-8">
+                <.icon name="hero-cube" class="w-12 h-12 mx-auto text-base-300 mb-4" />
+                <p class="text-base-content/60">Focus on your fresh products</p>
+                <p class="text-sm text-base-content/40 mt-1">
+                  Manage your inventory from the Products page
+                </p>
+              </div>
             <% end %>
           </div>
         </div>
-
+        
     <!-- Expiring Products Alert -->
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
@@ -150,7 +155,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
           </div>
         </div>
       </div>
-
+      
     <!-- Quick Actions -->
       <div class="mt-8">
         <div class="card bg-base-100 shadow-xl">
@@ -186,7 +191,7 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
           </div>
         </div>
       </div>
-
+      
     <!-- Malaysia Time -->
       <div class="mt-4 text-center text-sm text-base-content/50">
         Current time (Malaysia): {format_malaysia_time(@current_time)}
@@ -283,52 +288,6 @@ defmodule MakananSegarWeb.Vendor.DashboardLive do
 
   defp format_malaysia_time(datetime) do
     Calendar.strftime(datetime, "%B %d, %Y at %I:%M %p %Z")
-  end
-
-  defp render_recent_products_list(assigns) do
-    ~H"""
-    <div class="space-y-3">
-      <%= for recent_item <- @products do %>
-        <%= Phoenix.Component.with_assigns %{recent_item: recent_item} do %>
-          <.link
-            navigate={~p"/vendor/products/#{@recent_item.id}"}
-            class="flex items-center gap-3 p-3 border border-base-300 rounded-lg hover:bg-base-50 hover:shadow-md transition-all cursor-pointer group"
-          >
-            <div class="avatar">
-              <div class="w-12 h-12 rounded">
-                <%= if @recent_item.image do %>
-                  <img src={@recent_item.image} alt={@recent_item.name} />
-                <% else %>
-                  <div class="bg-primary text-primary-content w-12 h-12 flex items-center justify-center">
-                    {String.first(@recent_item.name) |> String.upcase()}
-                  </div>
-                <% end %>
-              </div>
-            </div>
-            <div class="flex-1">
-              <h4 class="font-semibold text-sm group-hover:text-primary">
-                {@recent_item.name}
-              </h4>
-              <p class="text-xs text-base-content/70">{@recent_item.category}</p>
-              <p class="text-xs font-medium">RM {@recent_item.price}</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col items-end gap-1">
-                <div class={"badge badge-sm #{if @recent_item.is_active, do: "badge-success", else: "badge-error"}"}>
-                  {if @recent_item.is_active, do: "Active", else: "Inactive"}
-                </div>
-                <span class="text-xs text-base-content/50">
-                  {if Product.expired?(@recent_item),
-                    do: "Expired",
-                    else: format_time_until_expiry(@recent_item.expires_at)}
-                </span>
-              </div>
-            </div>
-          </.link>
-        <% end %>
-      <% end %>
-    </div>
-    """
   end
 
   defp render_expiring_products_list(assigns) do

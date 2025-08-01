@@ -414,69 +414,6 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
                 </div>
               </div>
             </div>
-            
-    <!-- Vendor Products -->
-            <div class="card bg-base-100 border border-base-300">
-              <div class="card-body">
-                <h4 class="card-title text-xl">Available Products</h4>
-                <%= if @vendor_products == [] do %>
-                  <div class="text-center py-8">
-                    <div class="text-4xl mb-4">📦</div>
-                    <p class="text-gray-500">No products currently available from this vendor.</p>
-                    <p class="text-sm text-gray-400 mt-1">Check back later for fresh items!</p>
-                  </div>
-                <% else %>
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <%= for product <- @vendor_products do %>
-                      <div class="card card-compact bg-base-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="card-body">
-                          <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-2xl">
-                              <%= case product.category do %>
-                                <% "fish" -> %>
-                                  🐟
-                                <% "vegetables" -> %>
-                                  🥬
-                                <% "fruits" -> %>
-                                  🥭
-                                <% _ -> %>
-                                  📦
-                              <% end %>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                              <h5 class="font-semibold text-sm truncate">{product.name}</h5>
-                              <div class="flex items-center justify-between mt-1">
-                                <span class="text-lg font-bold text-success">RM {product.price}</span>
-                                <div class={[
-                                  "badge badge-xs",
-                                  case product.category do
-                                    "fish" -> "badge-info"
-                                    "vegetables" -> "badge-success"
-                                    "fruits" -> "badge-warning"
-                                    _ -> "badge-neutral"
-                                  end
-                                ]}>
-                                  {String.capitalize(product.category)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="card-actions justify-end mt-2">
-                            <button
-                              phx-click="view_product"
-                              phx-value-id={product.id}
-                              class="btn btn-primary btn-xs"
-                            >
-                              View Details
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
           </div>
         </div>
         <div class="modal-backdrop" phx-click="close_modal"></div>
@@ -860,7 +797,6 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
            |> assign(:products, products)
            |> assign(:selected_product, nil)
            |> assign(:selected_vendor, nil)
-           |> assign(:vendor_products, [])
            |> assign(:unread_counts, unread_counts)
            |> assign(:conversation_statuses, conversation_statuses)
            |> assign(:modal_loading, false)
@@ -880,7 +816,6 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
              |> assign(:products, [])
              |> assign(:selected_product, nil)
              |> assign(:selected_vendor, nil)
-             |> assign(:vendor_products, [])
              |> assign(:unread_counts, %{})
              |> assign(:conversation_statuses, %{})
              |> assign(:modal_loading, false)
@@ -1138,7 +1073,6 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
      socket
      |> assign(:selected_product, nil)
      |> assign(:selected_vendor, nil)
-     |> assign(:vendor_products, [])
      |> assign(:modal_loading, false)
      |> assign(:guest_name_provided, false)
      |> assign(:chat_messages, [])
@@ -1151,15 +1085,9 @@ defmodule MakananSegarWeb.PublicLive.HomeLive do
       vendor_id_int = String.to_integer(vendor_id)
       vendor = MakananSegar.Accounts.get_user!(vendor_id_int)
 
-      vendor_products =
-        socket.assigns.products
-        |> Enum.filter(&(&1.user_id == vendor.id))
-        |> Enum.take(6)
-
       {:noreply,
        socket
-       |> assign(:selected_vendor, vendor)
-       |> assign(:vendor_products, vendor_products)}
+       |> assign(:selected_vendor, vendor)}
     rescue
       _error ->
         {:noreply, put_flash(socket, :error, "Could not load vendor details")}
