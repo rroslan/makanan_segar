@@ -28,6 +28,11 @@ if config_env() == :prod do
       For example: ecto://USER:PASS@HOST/DATABASE
       """
 
+  config :makanan_segar, MakananSegar.Mailer,
+    adapter: Resend.Swoosh.Adapter,
+    api_key: System.fetch_env!("RESEND_API_KEY")
+
+  config :swoosh, :api_client, Swoosh.ApiClient.Finch
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :makanan_segar, MakananSegar.Repo,
@@ -50,13 +55,14 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
-  port = String.to_integer(System.get_env("PORT") || "4000")
+  host = System.get_env("PHX_HOST") || "applikasi.tech"
+  port = String.to_integer(System.get_env("PORT") || "4010")
 
   config :makanan_segar, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
   config :makanan_segar, MakananSegarWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
+    check_origin: ["https://applikasi.tech", "https://www.applikasi.tech"],
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
