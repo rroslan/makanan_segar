@@ -52,24 +52,43 @@ IO.puts("📧 Fruits vendor email: #{fruit_vendor_email}")
 env_source = if System.get_env("ADMIN_EMAIL"), do: "environment variables", else: "default values"
 IO.puts("📝 Using #{env_source} for email addresses")
 
-# Helper function to create user with confirmation
+# Helper function to create user with magic link registration
 create_user = fn email, attrs ->
-  user_attrs =
-    Map.merge(attrs, %{
-      email: email
-    })
+  # First, create user with only email and name using registration_changeset
+  registration_attrs = %{
+    email: email,
+    name: Map.get(attrs, :name, "User")
+  }
 
   user =
     %User{}
-    |> User.registration_changeset(user_attrs)
+    |> User.registration_changeset(registration_attrs)
     |> Repo.insert!()
+
+  # Confirm the user (simulate email confirmation for seeds)
+  user =
+    user
     |> User.confirm_changeset()
     |> Repo.update!()
 
-  # Update admin and vendor flags using role changeset
-  if Map.has_key?(attrs, :is_admin) or Map.has_key?(attrs, :is_vendor) do
+  # Update admin and vendor roles if specified
+  role_attrs = Map.take(attrs, [:is_admin, :is_vendor])
+
+  if map_size(role_attrs) > 0 do
     user
-    |> User.role_changeset(attrs)
+    |> User.role_changeset(role_attrs)
+    |> Repo.update!()
+  else
+    user
+  end
+
+  # Update profile information (business details, phone, address) if provided
+  profile_attrs =
+    Map.take(attrs, [:phone, :address, :business_name, :business_type, :business_description])
+
+  if map_size(profile_attrs) > 0 do
+    user
+    |> User.profile_changeset(profile_attrs)
     |> Repo.update!()
   else
     user
