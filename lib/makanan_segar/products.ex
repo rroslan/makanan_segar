@@ -89,11 +89,12 @@ defmodule MakananSegar.Products do
 
   """
   def create_product(%Scope{} = scope, attrs) do
-    with {:ok, product = %Product{}} <-
-           %Product{}
-           |> Product.changeset(attrs, scope)
-           |> handle_image_upload()
-           |> Repo.insert() do
+    changeset = 
+      %Product{}
+      |> Product.changeset(attrs, scope)
+      |> handle_image_upload()
+
+    with {:ok, product = %Product{}} <- Repo.insert(changeset) do
       # Schedule automatic deletion when product expires
       ProductExpiryWorker.schedule_product_expiry(product.id, product.expires_at)
 
@@ -171,7 +172,7 @@ defmodule MakananSegar.Products do
 
   """
   def change_product(%Scope{} = scope, %Product{} = product, attrs \\ %{}) do
-    if product.user_id == scope.user.id do
+    if product.user.id == scope.user.id do
       Product.update_changeset(product, attrs)
     else
       Product.update_changeset(product, %{})
