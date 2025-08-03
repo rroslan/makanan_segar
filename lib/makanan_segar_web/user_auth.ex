@@ -50,15 +50,27 @@ defmodule MakananSegarWeb.UserAuth do
   def log_out_user(conn) do
     user_token = get_session(conn, :user_token)
 
-    # Delete token synchronously to avoid Mix.env() runtime issues in production
+    # Delete token synchronously - simple approach to avoid any runtime issues
     if user_token do
-      Accounts.delete_user_session_token(user_token)
+      try do
+        Accounts.delete_user_session_token(user_token)
+      rescue
+        # Continue logout even if token deletion fails
+        _ -> :ok
+      end
     end
 
+    # Broadcast disconnect for LiveView
     if live_socket_id = get_session(conn, :live_socket_id) do
-      MakananSegarWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
+      try do
+        MakananSegarWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
+      rescue
+        # Continue logout even if broadcast fails
+        _ -> :ok
+      end
     end
 
+    # Clear session and redirect
     conn
     |> renew_session(nil)
     |> delete_resp_cookie(@remember_me_cookie)

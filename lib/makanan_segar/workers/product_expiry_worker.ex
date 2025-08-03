@@ -32,30 +32,27 @@ defmodule MakananSegar.Workers.ProductExpiryWorker do
   defp perform_bulk_cleanup do
     malaysia_now = DateTime.now!("Asia/Kuala_Lumpur")
 
-    # Find all expired products
+    # Find all active products that have expired
     expired_products_query =
       from p in Product,
-        where: p.expires_at < ^malaysia_now
+        where: p.expires_at < ^malaysia_now and p.is_active == true
 
     # Get count before deletion for logging
-    expired_count =
-      expired_products_query
-      |> Repo.aggregate(:count, :id)
+    expired_count = Repo.aggregate(expired_products_query, :count, :id)
 
     if expired_count > 0 do
-      # Delete expired products
-      {deleted_count, _} =
-        expired_products_query
-        |> Repo.delete_all()
+      # Mark expired products as inactive (soft delete)
+      {updated_count, _} =
+        Repo.update_all(expired_products_query, set: [is_active: false, updated_at: malaysia_now])
 
       # Log the cleanup
       require Logger
 
       Logger.info(
-        "ProductExpiryWorker: Deleted #{deleted_count} expired products at #{DateTime.to_string(malaysia_now)}"
+        "ProductExpiryWorker: Marked #{updated_count} expired products as inactive at #{DateTime.to_string(malaysia_now)}"
       )
 
-      {:ok, %{deleted_count: deleted_count, timestamp: malaysia_now}}
+      {:ok, %{updated_count: updated_count, timestamp: malaysia_now}}
     else
       # No expired products found
       require Logger
@@ -64,7 +61,7 @@ defmodule MakananSegar.Workers.ProductExpiryWorker do
         "ProductExpiryWorker: No expired products found at #{DateTime.to_string(malaysia_now)}"
       )
 
-      {:ok, %{deleted_count: 0, timestamp: malaysia_now}}
+      {:ok, %{updated_count: 0, timestamp: malaysia_now}}
     end
   end
 

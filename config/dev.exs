@@ -86,3 +86,9 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Configure uploads directory for development
+uploads_dir = Path.join([__DIR__, "..", "priv", "static", "uploads"])
+File.mkdir_p!(uploads_dir)
+
+config :makanan_segar, :uploads_dir, uploads_dir

@@ -331,8 +331,19 @@ defmodule MakananSegar.Accounts do
   Deletes the signed token with the given context.
   """
   def delete_user_session_token(token) do
-    Repo.delete_all(from(UserToken, where: [token: ^token, context: "session"]))
-    :ok
+    require Logger
+
+    try do
+      Logger.info("Attempting to delete session token from database")
+      result = Repo.delete_all(from(UserToken, where: [token: ^token, context: "session"]))
+      Logger.info("Successfully deleted session token, affected rows: #{inspect(result)}")
+      :ok
+    rescue
+      error ->
+        Logger.error("Database error in delete_user_session_token: #{inspect(error)}")
+        Logger.error("Stacktrace: #{Exception.format_stacktrace(__STACKTRACE__)}")
+        {:error, error}
+    end
   end
 
   ## Token helper

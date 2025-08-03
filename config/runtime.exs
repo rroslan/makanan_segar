@@ -22,26 +22,25 @@ end
 
 if config_env() == :prod do
   database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
+    System.fetch_env!("DATABASE_URL")
 
   config :makanan_segar, MakananSegar.Mailer,
     adapter: Resend.Swoosh.Adapter,
     api_key: System.fetch_env!("RESEND_API_KEY"),
     from: {"Makanan Segar", "noreply@applikasi.tech"}
 
-  config :swoosh, :api_client, Swoosh.ApiClient.Finch
+  # The Swoosh API client is configured in `config/prod.exs` to use Req.
+  # We remove the line here to avoid overriding it with Finch.
+  # config :swoosh, :api_client, Swoosh.ApiClient.Finch
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :makanan_segar, MakananSegar.Repo,
-    # ssl: true,
+    # ssl: true, # Enable this if your database is external
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    # For machines with several cores, consider starting multiple pools of `pool_size`
-    # pool_count: 4,
+    # A longer timeout is useful for background jobs (Oban) that hold a
+    # connection for a while.
+    pool_timeout: 3600,
     socket_options: maybe_ipv6
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
@@ -50,11 +49,7 @@ if config_env() == :prod do
   # to check this value into version control, so we use an environment
   # variable instead.
   secret_key_base =
-    System.get_env("SECRET_KEY_BASE") ||
-      raise """
-      environment variable SECRET_KEY_BASE is missing.
-      You can generate one by calling: mix phx.gen.secret
-      """
+    System.fetch_env!("SECRET_KEY_BASE")
 
   host = System.get_env("PHX_HOST") || "applikasi.tech"
   port = String.to_integer(System.get_env("PORT") || "4010")
@@ -65,20 +60,21 @@ if config_env() == :prod do
     url: [host: host, port: 443, scheme: "https"],
     check_origin: ["https://applikasi.tech", "https://www.applikasi.tech"],
     http: [
-      # Enable IPv6 and bind on all interfaces.
-      # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
-      # See the documentation on https://hexdocs.pm/bandit/Bandit.html#t:options/0
-      # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-      ip: {0, 0, 0, 0, 0, 0, 0, 0},
+      # Since Nginx is handling public traffic, we bind to the loopback
+      # address for added security. This prevents direct access to the app.
+      ip: {127, 0, 0, 1},
       port: port
     ],
     secret_key_base: secret_key_base
 
   # Configure upload directory for production
-  uploads_dir = System.get_env("UPLOADS_DIR") || "/app/uploads"
+  # IMPORTANT: Set the UPLOADS_DIR env var to a persistent path
+  # outside of your release directory, e.g., /var/www/makanan_segar/uploads
+  uploads_dir =
+    System.fetch_env!("UPLOADS_DIR")
   File.mkdir_p!(uploads_dir)
 
-  config :river_side, :uploads_dir, uploads_dir
+  config :makanan_segar, :uploads_dir, uploads_dir
 
   # ## SSL Support
   #
