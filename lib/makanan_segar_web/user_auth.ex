@@ -50,13 +50,9 @@ defmodule MakananSegarWeb.UserAuth do
   def log_out_user(conn) do
     user_token = get_session(conn, :user_token)
 
-    # Delete token asynchronously to speed up logout (synchronously in test env)
+    # Delete token synchronously to avoid Mix.env() runtime issues in production
     if user_token do
-      if Mix.env() == :test do
-        Accounts.delete_user_session_token(user_token)
-      else
-        Task.start(fn -> Accounts.delete_user_session_token(user_token) end)
-      end
+      Accounts.delete_user_session_token(user_token)
     end
 
     if live_socket_id = get_session(conn, :live_socket_id) do
