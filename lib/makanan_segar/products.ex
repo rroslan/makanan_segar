@@ -7,6 +7,7 @@ defmodule MakananSegar.Products do
   alias MakananSegar.Repo
 
   alias MakananSegar.Products.Product
+  alias MakananSegar.Uploads
   alias MakananSegar.Accounts.Scope
   alias MakananSegar.Workers.ProductExpiryWorker
 
@@ -91,6 +92,7 @@ defmodule MakananSegar.Products do
     with {:ok, product = %Product{}} <-
            %Product{}
            |> Product.changeset(attrs, scope)
+           |> handle_image_upload()
            |> Repo.insert() do
       # Schedule automatic deletion when product expires
       ProductExpiryWorker.schedule_product_expiry(product.id, product.expires_at)
@@ -117,6 +119,7 @@ defmodule MakananSegar.Products do
       with {:ok, updated_product = %Product{}} <-
              product
              |> Product.update_changeset(attrs)
+             |> handle_image_upload()
              |> Repo.update() do
         # If expiry date changed, reschedule the expiry job
         if updated_product.expires_at != product.expires_at do
@@ -176,6 +179,22 @@ defmodule MakananSegar.Products do
     end
   end
 
+  defp handle_image_upload(changeset) do
+    # The form sends the upload via the virtual `image_upload` field.
+    # We pattern match on it to store the file and update the real `image` field.
+    case Ecto.Changeset.get_field(changeset, :image_upload) do
+      %Plug.Upload{} = upload ->
+        case Uploads.store(upload) do
+          {:ok, path} ->
+            Ecto.Changeset.put_change(changeset, :image, path)
+          {:error, _reason} ->
+            Ecto.Changeset.add_error(changeset, :image_upload, "could not be saved")
+        end
+
+      _ ->
+        changeset
+    end
+  end
   @doc """
   Returns the list of all public products (for browsing).
   """

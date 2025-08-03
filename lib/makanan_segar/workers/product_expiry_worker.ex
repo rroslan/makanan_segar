@@ -75,22 +75,22 @@ defmodule MakananSegar.Workers.ProductExpiryWorker do
 
       product ->
         if DateTime.compare(product.expires_at, malaysia_now) == :lt do
-          # Product has expired, delete it
-          case Repo.delete(product) do
-            {:ok, _deleted_product} ->
+          # Product has expired, mark it as inactive (soft delete)
+          case Repo.update(Product.changeset(product, %{is_active: false})) do
+            {:ok, _updated_product} ->
               require Logger
 
               Logger.info(
-                "ProductExpiryWorker: Deleted expired product #{product_id} (#{product.name})"
+                "ProductExpiryWorker: Marked expired product #{product_id} (#{product.name}) as inactive"
               )
 
-              {:ok, %{status: :deleted, product_id: product_id, product_name: product.name}}
+              {:ok, %{status: :deactivated, product_id: product_id, product_name: product.name}}
 
             {:error, changeset} ->
               require Logger
 
               Logger.error(
-                "ProductExpiryWorker: Failed to delete expired product #{product_id}: #{inspect(changeset.errors)}"
+                "ProductExpiryWorker: Failed to deactivate expired product #{product_id}: #{inspect(changeset.errors)}"
               )
 
               {:error, changeset}

@@ -7,6 +7,7 @@ defmodule MakananSegar.Accounts.User do
     field :name, :string
     field :address, :string
     field :profile_image, :string
+    field :profile_image_upload, :any, virtual: true
     field :is_admin, :boolean, default: false
     field :is_vendor, :boolean, default: false
     field :confirmed_at, :utc_datetime
@@ -62,6 +63,7 @@ defmodule MakananSegar.Accounts.User do
       :name,
       :address,
       :profile_image,
+      :profile_image_upload,
       :business_name,
       :phone,
       :business_description,

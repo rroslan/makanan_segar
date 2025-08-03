@@ -8,6 +8,7 @@ defmodule MakananSegar.Products.Product do
     field :category, :string
     field :price, :decimal
     field :image, :string
+    field :image_upload, :any, virtual: true
     field :expires_at, :utc_datetime
     field :is_active, :boolean, default: true
 
@@ -21,7 +22,16 @@ defmodule MakananSegar.Products.Product do
   @doc false
   def changeset(product, attrs, user_scope \\ nil) do
     product
-    |> cast(attrs, [:name, :description, :category, :price, :image, :expires_at, :is_active])
+    |> cast(attrs, [
+      :name,
+      :description,
+      :category,
+      :price,
+      :image,
+      :image_upload,
+      :expires_at,
+      :is_active
+    ])
     |> validate_required([:name, :description, :category, :price, :expires_at])
     |> validate_length(:name, min: 2, max: 100)
     |> validate_length(:description, min: 10, max: 1000)
@@ -37,7 +47,16 @@ defmodule MakananSegar.Products.Product do
   """
   def update_changeset(product, attrs) do
     product
-    |> cast(attrs, [:name, :description, :category, :price, :image, :expires_at, :is_active])
+    |> cast(attrs, [
+      :name,
+      :description,
+      :category,
+      :price,
+      :image,
+      :image_upload,
+      :expires_at,
+      :is_active
+    ])
     |> validate_required([:name, :description, :category, :price, :expires_at])
     |> validate_length(:name, min: 2, max: 100)
     |> validate_length(:description, min: 10, max: 1000)
