@@ -71,7 +71,7 @@ if config_env() == :prod do
   # IMPORTANT: Set the UPLOADS_DIR env var to a persistent path
   # outside of your release directory, e.g., /var/www/makanan_segar/uploads
   uploads_dir =
-    System.fetch_env!("UPLOADS_DIR")
+    System.get_env("UPLOADS_DIR", "/var/www/makanan_segar/uploads")
   File.mkdir_p!(uploads_dir)
 
   config :makanan_segar, :uploads_dir, uploads_dir

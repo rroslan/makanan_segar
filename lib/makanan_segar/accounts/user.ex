@@ -23,6 +23,8 @@ defmodule MakananSegar.Accounts.User do
     field :website, :string
     field :social_media, :map
 
+    has_many :roles, MakananSegar.Accounts.Role
+
     timestamps(type: :utc_datetime)
   end
 

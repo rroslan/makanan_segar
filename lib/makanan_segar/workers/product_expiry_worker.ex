@@ -57,7 +57,7 @@ defmodule MakananSegar.Workers.ProductExpiryWorker do
       # No expired products found
       require Logger
 
-      Logger.debug(
+      Logger.info(
         "ProductExpiryWorker: No expired products found at #{DateTime.to_string(malaysia_now)}"
       )
 

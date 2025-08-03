@@ -3,8 +3,6 @@ defmodule MakananSegar.Uploads do
   A helper module for handling file uploads.
   """
 
-  @uploads_dir Application.compile_env!(:makanan_segar, :uploads_dir)
-
   @doc """
   Stores an uploaded file from a form into the persistent uploads directory.
 
@@ -13,8 +11,9 @@ defmodule MakananSegar.Uploads do
   URL path to be stored in the database.
   """
   def store(%Plug.Upload{} = upload) do
+    uploads_dir = uploads_dir()
     filename = "#{Ecto.UUID.generate()}#{Path.extname(upload.filename)}"
-    dest_path = Path.join(@uploads_dir, filename)
+    dest_path = Path.join(uploads_dir, filename)
 
     case File.cp(upload.path, dest_path) do
       :ok ->
@@ -25,5 +24,9 @@ defmodule MakananSegar.Uploads do
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  defp uploads_dir do
+    Application.fetch_env!(:makanan_segar, :uploads_dir)
   end
 end

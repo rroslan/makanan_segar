@@ -7,7 +7,6 @@ defmodule MakananSegar.Accounts do
   alias MakananSegar.Repo
 
   alias MakananSegar.Accounts.{User, UserToken, UserNotifier}
-  alias MakananSegar.Uploads
 
   ## Database getters
 
@@ -117,24 +116,7 @@ defmodule MakananSegar.Accounts do
   def update_user_profile(user, attrs) do
     user
     |> User.profile_changeset(attrs)
-    |> handle_profile_image_upload()
     |> Repo.update()
-  end
-
-  defp handle_profile_image_upload(changeset) do
-    case Ecto.Changeset.get_field(changeset, :profile_image_upload) do
-      %Plug.Upload{} = upload ->
-        case Uploads.store(upload) do
-          {:ok, path} ->
-            Ecto.Changeset.put_change(changeset, :profile_image, path)
-
-          {:error, _reason} ->
-            Ecto.Changeset.add_error(changeset, :profile_image_upload, "could not be saved")
-        end
-
-      _ ->
-        changeset
-    end
   end
 
   @doc """
