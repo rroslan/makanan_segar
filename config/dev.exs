@@ -57,7 +57,7 @@ config :makanan_segar, MakananSegarWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
-      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
       ~r"lib/makanan_segar_web/(?:controllers|live|components|router)/?.*\.(ex|heex)$"
     ]
@@ -90,5 +90,4 @@ config :swoosh, :api_client, false
 # Configure uploads directory for development
 uploads_dir = Path.join([__DIR__, "..", "priv", "static", "uploads"])
 File.mkdir_p!(uploads_dir)
-
 config :makanan_segar, :uploads_dir, uploads_dir

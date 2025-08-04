@@ -74,7 +74,7 @@ defmodule MakananSegarWeb.ProductLiveTest do
       assert {:ok, index_live, _html} =
                form_live
                |> form("#product-form", product: @create_attrs)
-               |> render_submit()
+               |> render_submit(uploaded_files: %{product_image: []})
                |> follow_redirect(conn, ~p"/vendor/products")
 
       html = render(index_live)
@@ -107,7 +107,7 @@ defmodule MakananSegarWeb.ProductLiveTest do
       assert {:ok, index_live, _html} =
                form_live
                |> form("#product-form", product: @update_attrs)
-               |> render_submit()
+               |> render_submit(uploaded_files: %{product_image: []})
                |> follow_redirect(conn, ~p"/vendor/products")
 
       html = render(index_live)
@@ -157,7 +157,7 @@ defmodule MakananSegarWeb.ProductLiveTest do
       assert {:ok, index_live, _html} =
                form_live
                |> form("#product-form", product: @update_attrs)
-               |> render_submit()
+               |> render_submit(uploaded_files: %{product_image: []})
                |> follow_redirect(conn, ~p"/vendor/products")
 
       html = render(index_live)

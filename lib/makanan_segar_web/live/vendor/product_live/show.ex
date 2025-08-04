@@ -191,9 +191,14 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Show do
   def handle_event("toggle_active", _, socket) do
     product = socket.assigns.product
 
-    case Products.update_product(socket.assigns.current_scope, product, %{
-           is_active: !product.is_active
-         }) do
+    case Products.update_product(
+           socket.assigns.current_scope,
+           product,
+           %{
+             is_active: !product.is_active
+           },
+           nil
+         ) do
       {:ok, updated_product} ->
         {:noreply,
          socket

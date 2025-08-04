@@ -21,6 +21,7 @@ defmodule MakananSegarWeb.Router do
     pipe_through :browser
 
     live "/", PublicLive.HomeLive, :index
+    live "/test-upload", TestUploadLive, :index
   end
 
   ## Admin routes
@@ -96,7 +97,6 @@ defmodule MakananSegarWeb.Router do
   ## Public routes for browsing products
   scope "/", MakananSegarWeb do
     pipe_through :browser
-
 
     live "/products/:id", PublicLive.ProductShow, :show
     live "/vendors", PublicLive.VendorIndex, :index

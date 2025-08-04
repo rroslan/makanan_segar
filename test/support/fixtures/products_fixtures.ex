@@ -22,7 +22,7 @@ defmodule MakananSegar.ProductsFixtures do
         price: "120.5"
       })
 
-    {:ok, product} = MakananSegar.Products.create_product(scope, attrs)
+    {:ok, product} = MakananSegar.Products.create_product(scope, attrs, nil)
     product
   end
 end

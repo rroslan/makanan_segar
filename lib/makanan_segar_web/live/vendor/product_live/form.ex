@@ -19,7 +19,7 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Form do
         </:actions>
       </.header>
 
-      <.form for={@form} id="product-form" phx-change="validate" phx-submit="save">
+      <.form for={@form} id="product-form" phx-change="validate" phx-submit="save" multipart>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Left Column -->
           <div class="space-y-4">
@@ -198,16 +198,31 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Form do
 
   @impl true
   def mount(params, _session, socket) do
-    {:ok,
-     socket
-     |> assign(:return_to, return_to(params["return_to"]))
-     |> allow_upload(:product_image,
-       accept: ~w(.jpg .jpeg .png .webp),
-       max_entries: 1,
-       max_file_size: 5_000_000,
-       auto_upload: false
-     )
-     |> apply_action(socket.assigns.live_action, params)}
+    require Logger
+    Logger.info("MOUNT - Starting product form mount")
+
+    socket_with_upload =
+      socket
+      |> assign(:return_to, return_to(params["return_to"]))
+      |> allow_upload(:product_image,
+        accept: ~w(.jpg .jpeg .png .webp),
+        max_entries: 1,
+        max_file_size: 5_000_000,
+        auto_upload: false,
+        progress: &handle_progress/3
+      )
+
+    Logger.info(
+      "MOUNT - Upload config created: #{inspect(socket_with_upload.assigns.uploads.product_image)}"
+    )
+
+    final_socket = socket_with_upload |> apply_action(socket.assigns.live_action, params)
+
+    Logger.info(
+      "MOUNT - Final socket upload state: #{inspect(final_socket.assigns.uploads.product_image)}"
+    )
+
+    {:ok, final_socket}
   end
 
   defp return_to("show"), do: "show"
@@ -240,30 +255,28 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Form do
         product_params
       )
 
+    require Logger
+
+    Logger.info(
+      "VALIDATE - Upload entries count: #{length(socket.assigns.uploads.product_image.entries)}"
+    )
+
+    Logger.info(
+      "VALIDATE - Upload errors: #{inspect(upload_errors(socket.assigns.uploads.product_image))}"
+    )
+
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
   def handle_event("save", %{"product" => product_params}, socket) do
-    # Handle image upload
-    uploaded_files =
-      consume_uploaded_entries(socket, :product_image, fn %{path: path}, entry ->
-        upload_dir = "priv/static/uploads/products"
-        File.mkdir_p!(upload_dir)
+    require Logger
 
-        ext = Path.extname(entry.client_name) |> String.downcase() |> String.trim_leading(".")
-        filename = "#{DateTime.utc_now() |> DateTime.to_unix()}_#{entry.uuid}.#{ext}"
-        dest = Path.join(upload_dir, filename)
+    Logger.info(
+      "SAVE - Upload entries count: #{length(socket.assigns.uploads.product_image.entries)}"
+    )
 
-        File.cp!(path, dest)
-        {:ok, "/uploads/products/#{filename}"}
-      end)
-
-    # Add uploaded image URL to params if present
-    product_params =
-      case uploaded_files do
-        [url | _] -> Map.put(product_params, "image", url)
-        _ -> product_params
-      end
+    Logger.info("SAVE - Upload entries: #{inspect(socket.assigns.uploads.product_image.entries)}")
+    Logger.info("SAVE - Upload config: #{inspect(socket.assigns.uploads.product_image)}")
 
     save_product(socket, socket.assigns.live_action, product_params)
   end
@@ -284,10 +297,40 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Form do
   end
 
   defp save_product(socket, :edit, product_params) do
+    require Logger
+
+    Logger.info(
+      "SAVE_PRODUCT EDIT - Starting with #{length(socket.assigns.uploads.product_image.entries)} entries"
+    )
+
+    uploaded_image =
+      case socket.assigns.uploads.product_image.entries do
+        [] ->
+          Logger.info("SAVE_PRODUCT EDIT - No entries to consume")
+          nil
+
+        entries ->
+          Logger.info("SAVE_PRODUCT EDIT - Consuming #{length(entries)} entries")
+
+          consume_uploaded_entries(socket, :product_image, fn %{path: path}, entry ->
+            Logger.info("SAVE_PRODUCT EDIT - Processing entry: #{entry.client_name}")
+
+            %Plug.Upload{
+              path: path,
+              filename: entry.client_name,
+              content_type: entry.client_type
+            }
+          end)
+          |> List.first()
+      end
+
+    Logger.info("SAVE_PRODUCT EDIT - Final uploaded_image: #{inspect(uploaded_image)}")
+
     case Products.update_product(
            socket.assigns.current_scope,
            socket.assigns.product,
-           product_params
+           product_params,
+           uploaded_image
          ) do
       {:ok, product} ->
         {:noreply,
@@ -303,7 +346,36 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Form do
   end
 
   defp save_product(socket, :new, product_params) do
-    case Products.create_product(socket.assigns.current_scope, product_params) do
+    require Logger
+
+    Logger.info(
+      "SAVE_PRODUCT NEW - Starting with #{length(socket.assigns.uploads.product_image.entries)} entries"
+    )
+
+    uploaded_image =
+      case socket.assigns.uploads.product_image.entries do
+        [] ->
+          Logger.info("SAVE_PRODUCT NEW - No entries to consume")
+          nil
+
+        entries ->
+          Logger.info("SAVE_PRODUCT NEW - Consuming #{length(entries)} entries")
+
+          consume_uploaded_entries(socket, :product_image, fn %{path: path}, entry ->
+            Logger.info("SAVE_PRODUCT NEW - Processing entry: #{entry.client_name}")
+
+            %Plug.Upload{
+              path: path,
+              filename: entry.client_name,
+              content_type: entry.client_type
+            }
+          end)
+          |> List.first()
+      end
+
+    Logger.info("SAVE_PRODUCT NEW - Final uploaded_image: #{inspect(uploaded_image)}")
+
+    case Products.create_product(socket.assigns.current_scope, product_params, uploaded_image) do
       {:ok, product} ->
         {:noreply,
          socket
@@ -324,4 +396,20 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Form do
   defp error_to_string(:not_accepted), do: "Invalid file type. Please upload JPG, PNG, or WEBP"
   defp error_to_string(:too_many_files), do: "You can only upload one image"
   defp error_to_string(err), do: Phoenix.Naming.humanize(err)
+
+  defp handle_progress(:product_image, entry, socket) do
+    require Logger
+
+    Logger.info(
+      "PROGRESS - Entry: #{entry.client_name}, Progress: #{entry.progress}%, Done: #{entry.done?}"
+    )
+
+    if entry.done? do
+      Logger.info("PROGRESS - Entry completed: #{entry.client_name}")
+      {:noreply, socket}
+    else
+      Logger.info("PROGRESS - Entry in progress: #{entry.client_name} - #{entry.progress}%")
+      {:noreply, socket}
+    end
+  end
 end

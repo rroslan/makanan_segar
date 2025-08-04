@@ -60,7 +60,7 @@ defmodule MakananSegar.ProductsTest do
 
       scope = user_scope_fixture()
 
-      assert {:ok, %Product{} = product} = Products.create_product(scope, valid_attrs)
+      assert {:ok, %Product{} = product} = Products.create_product(scope, valid_attrs, nil)
       assert product.name == "some name"
       assert product.description == "some description"
       assert product.image == "some image"
@@ -73,7 +73,7 @@ defmodule MakananSegar.ProductsTest do
 
     test "create_product/2 with invalid data returns error changeset" do
       scope = user_scope_fixture()
-      assert {:error, %Ecto.Changeset{}} = Products.create_product(scope, @invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Products.create_product(scope, @invalid_attrs, nil)
     end
 
     test "update_product/3 with valid data updates the product" do
@@ -94,7 +94,9 @@ defmodule MakananSegar.ProductsTest do
         is_active: false
       }
 
-      assert {:ok, %Product{} = product} = Products.update_product(scope, product, update_attrs)
+      assert {:ok, %Product{} = product} =
+               Products.update_product(scope, product, update_attrs, nil)
+
       assert product.name == "some updated name"
       assert product.description == "some updated description"
       assert product.image == "some updated image"
@@ -104,19 +106,21 @@ defmodule MakananSegar.ProductsTest do
       assert product.is_active == false
     end
 
-    test "update_product/3 with invalid scope returns error" do
+    test "update_product/4 with invalid scope returns error" do
       scope = user_scope_fixture()
       other_scope = user_scope_fixture()
       product = product_fixture(scope)
 
       # The function returns an error tuple instead of raising
-      assert {:error, :unauthorized} = Products.update_product(other_scope, product, %{})
+      assert {:error, :unauthorized} = Products.update_product(other_scope, product, %{}, nil)
     end
 
-    test "update_product/3 with invalid data returns error changeset" do
+    test "update_product/4 with invalid data returns error changeset" do
       scope = user_scope_fixture()
       product = product_fixture(scope)
-      assert {:error, %Ecto.Changeset{}} = Products.update_product(scope, product, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Products.update_product(scope, product, @invalid_attrs, nil)
 
       # Verify product wasn't changed
       retrieved_product = Products.get_product!(scope, product.id)

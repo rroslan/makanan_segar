@@ -73,7 +73,9 @@ defmodule MakananSegar.Products do
 
   """
   def get_product!(%Scope{} = scope, id) do
-    Repo.get_by!(Product, id: id, user_id: scope.user.id)
+    Product
+    |> Repo.get_by!(id: id, user_id: scope.user.id)
+    |> Repo.preload(:user)
   end
 
   @doc """
@@ -88,11 +90,11 @@ defmodule MakananSegar.Products do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_product(%Scope{} = scope, attrs) do
-    changeset = 
+  def create_product(%Scope{} = scope, attrs, uploaded_image) do
+    changeset =
       %Product{}
       |> Product.changeset(attrs, scope)
-      |> handle_image_upload()
+      |> handle_image_upload(uploaded_image)
 
     with {:ok, product = %Product{}} <- Repo.insert(changeset) do
       # Schedule automatic deletion when product expires
@@ -115,12 +117,12 @@ defmodule MakananSegar.Products do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_product(%Scope{} = scope, %Product{} = product, attrs) do
+  def update_product(%Scope{} = scope, %Product{} = product, attrs, uploaded_image) do
     if product.user_id == scope.user.id do
       with {:ok, updated_product = %Product{}} <-
              product
              |> Product.update_changeset(attrs)
-             |> handle_image_upload()
+             |> handle_image_upload(uploaded_image)
              |> Repo.update() do
         # If expiry date changed, reschedule the expiry job
         if updated_product.expires_at != product.expires_at do
@@ -172,6 +174,8 @@ defmodule MakananSegar.Products do
 
   """
   def change_product(%Scope{} = scope, %Product{} = product, attrs \\ %{}) do
+    product = Repo.preload(product, :user)
+
     if product.user.id == scope.user.id do
       Product.update_changeset(product, attrs)
     else
@@ -180,14 +184,15 @@ defmodule MakananSegar.Products do
     end
   end
 
-  defp handle_image_upload(changeset) do
+  defp handle_image_upload(changeset, uploaded_image) do
     # The form sends the upload via the virtual `image_upload` field.
     # We pattern match on it to store the file and update the real `image` field.
-    case Ecto.Changeset.get_field(changeset, :image_upload) do
+    case uploaded_image do
       %Plug.Upload{} = upload ->
-        case Uploads.store(upload) do
+        case Uploads.store(upload, "products") do
           {:ok, path} ->
             Ecto.Changeset.put_change(changeset, :image, path)
+
           {:error, _reason} ->
             Ecto.Changeset.add_error(changeset, :image_upload, "could not be saved")
         end
@@ -196,6 +201,7 @@ defmodule MakananSegar.Products do
         changeset
     end
   end
+
   @doc """
   Returns the list of all public products (for browsing).
   """

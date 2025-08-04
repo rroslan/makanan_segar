@@ -449,7 +449,8 @@ defmodule MakananSegarWeb.Vendor.ProfileLive do
         accept: ~w(.jpg .jpeg .png .webp),
         max_entries: 1,
         max_file_size: 5_000_000,
-        auto_upload: false
+        auto_upload: false,
+        progress: &handle_progress/3
       )
 
     {:ok, socket}
@@ -457,6 +458,16 @@ defmodule MakananSegarWeb.Vendor.ProfileLive do
 
   @impl true
   def handle_event("validate", %{"user" => user_params}, socket) do
+    require Logger
+
+    Logger.info(
+      "PROFILE VALIDATE - Upload entries count: #{length(socket.assigns.uploads.profile_image.entries)}"
+    )
+
+    Logger.info(
+      "PROFILE VALIDATE - Upload errors: #{inspect(upload_errors(socket.assigns.uploads.profile_image))}"
+    )
+
     changeset =
       socket.assigns.user
       |> Accounts.change_user_profile(user_params)
@@ -467,28 +478,52 @@ defmodule MakananSegarWeb.Vendor.ProfileLive do
 
   @impl true
   def handle_event("save", %{"user" => user_params}, socket) do
-    # Consume uploaded files first
-    uploaded_files =
-      consume_uploaded_entries(socket, :profile_image, fn %{path: path}, entry ->
-        upload_dir = "priv/static/uploads"
-        File.mkdir_p!(upload_dir)
+    require Logger
 
-        ext = Path.extname(entry.client_name) |> String.downcase() |> String.trim_leading(".")
-        filename = "#{DateTime.utc_now() |> DateTime.to_unix()}_#{entry.uuid}.#{ext}"
-        dest = Path.join(upload_dir, filename)
+    Logger.info(
+      "PROFILE SAVE - Upload entries count: #{length(socket.assigns.uploads.profile_image.entries)}"
+    )
 
-        File.cp!(path, dest)
-        {:ok, "/uploads/#{filename}"}
-      end)
+    Logger.info(
+      "PROFILE SAVE - Upload entries: #{inspect(socket.assigns.uploads.profile_image.entries)}"
+    )
 
-    # Add uploaded file URL to user_params if present
-    user_params =
-      case uploaded_files do
-        [url | _] -> Map.put(user_params, "profile_image", url)
-        _ -> user_params
+    Logger.info("PROFILE SAVE - Upload config: #{inspect(socket.assigns.uploads.profile_image)}")
+
+    # Consume uploaded files and add them to user_params
+    uploaded_profile_image =
+      case socket.assigns.uploads.profile_image.entries do
+        [] ->
+          Logger.info("PROFILE SAVE - No entries to consume")
+          nil
+
+        entries ->
+          Logger.info("PROFILE SAVE - Consuming #{length(entries)} entries")
+
+          consume_uploaded_entries(socket, :profile_image, fn %{path: path}, entry ->
+            Logger.info("PROFILE SAVE - Processing entry: #{entry.client_name}")
+
+            %Plug.Upload{
+              path: path,
+              filename: entry.client_name,
+              content_type: entry.client_type
+            }
+          end)
+          |> List.first()
       end
 
-    case Accounts.update_user_profile(socket.assigns.user, user_params) do
+    Logger.info("PROFILE SAVE - Final uploaded_profile_image: #{inspect(uploaded_profile_image)}")
+
+    updated_user_params =
+      case uploaded_profile_image do
+        %Plug.Upload{} = upload ->
+          Map.put(user_params, "profile_image_upload", upload)
+
+        nil ->
+          user_params
+      end
+
+    case Accounts.update_user_profile(socket.assigns.user, updated_user_params) do
       {:ok, updated_user} ->
         socket =
           socket
@@ -524,4 +559,23 @@ defmodule MakananSegarWeb.Vendor.ProfileLive do
   defp error_to_string(:upload_failed), do: "File upload failed, please try again"
   defp error_to_string(:file_not_found), do: "Uploaded file not found"
   defp error_to_string(err), do: "Upload error: #{inspect(err)}"
+
+  defp handle_progress(:profile_image, entry, socket) do
+    require Logger
+
+    Logger.info(
+      "PROFILE PROGRESS - Entry: #{entry.client_name}, Progress: #{entry.progress}%, Done: #{entry.done?}"
+    )
+
+    if entry.done? do
+      Logger.info("PROFILE PROGRESS - Entry completed: #{entry.client_name}")
+      {:noreply, socket}
+    else
+      Logger.info(
+        "PROFILE PROGRESS - Entry in progress: #{entry.client_name} - #{entry.progress}%"
+      )
+
+      {:noreply, socket}
+    end
+  end
 end

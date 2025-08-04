@@ -284,9 +284,14 @@ defmodule MakananSegarWeb.Vendor.ProductLive.Index do
   def handle_event("toggle_active", %{"id" => id}, socket) do
     product = Products.get_product!(socket.assigns.current_scope, id)
 
-    case Products.update_product(socket.assigns.current_scope, product, %{
-           is_active: !product.is_active
-         }) do
+    case Products.update_product(
+           socket.assigns.current_scope,
+           product,
+           %{
+             is_active: !product.is_active
+           },
+           nil
+         ) do
       {:ok, updated_product} ->
         products = Products.list_products(socket.assigns.current_scope)
         stats = calculate_stats(products)
